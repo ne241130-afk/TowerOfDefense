@@ -1,10 +1,13 @@
 using UnityEngine;
 using TMPro; //テキスト
+using UnityEngine.SceneManagement;
 
 public class TowerHealth : MonoBehaviour
 {
     [SerializeField] private int maxHp = 10;
     [SerializeField] private TMP_Text hpText;
+    [SerializeField] private string gameOverSceneName = "GameOverScene";
+
     private int hp;
     public bool IsDestroyed => hp <= 0;
 
@@ -32,7 +35,8 @@ public class TowerHealth : MonoBehaviour
         if (hp <= 0)
         {
             //いったん倒れましたの報告
-            Debug.Log("Towrが崩壊した。");
+            Debug.Log("Towerが崩壊した。");
+            SceneManager.LoadScene(gameOverSceneName);
         }
     }
 
