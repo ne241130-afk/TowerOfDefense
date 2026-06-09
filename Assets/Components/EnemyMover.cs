@@ -21,6 +21,11 @@ public class EnemyMover : MonoBehaviour
         target = newTarget;
     }
 
+    public void SetMoveSpeed(float newSpeed)
+    {
+        moveSpeed = newSpeed;
+    }
+
     private void FixedUpdate()
     {
         if (target == null)

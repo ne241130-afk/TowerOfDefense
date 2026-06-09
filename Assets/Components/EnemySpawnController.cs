@@ -10,6 +10,8 @@ public class EnemySpawnController : MonoBehaviour
     [SerializeField] private Transform target;
     //生成間隔
     [SerializeField] private float spawnInterval = 3f;
+    //敵の移動速度
+    [SerializeField] private float enemyMoveSpeed = 1.5f;
     //Towerが壊れてるか否か
     [SerializeField] private TowerHealth towerHealth;
 
@@ -54,7 +56,16 @@ public class EnemySpawnController : MonoBehaviour
         if (mover != null)
         {
             mover.SetTarget(target);
+            mover.SetMoveSpeed(enemyMoveSpeed);
         }
-}
+    }
+
+    // Wave管理システムからのパラメータ設定
+    public void SetWaveParameters(float newSpawnInterval, float newMoveSpeed)
+    {
+        spawnInterval = newSpawnInterval;
+        enemyMoveSpeed = newMoveSpeed;
+        timer = 0f; // 間隔変更時にタイマーをリセット
+    }
     
 }
