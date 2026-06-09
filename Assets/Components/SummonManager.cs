@@ -17,6 +17,12 @@ public class SummonManager : MonoBehaviour
         new Vector2(2.35f, 1.55f),
         new Vector2(2.35f, 2.65f)
     };
+    // 召喚は右→左→右…と交互に行う
+    private bool spawnRightNext = true;
+
+    [SerializeField] private float goldTickInterval = 4f; // 秒ごとに増える間隔
+    [SerializeField] private int goldPerTick = 1; // 1回あたりの増加量
+    private float goldTimer = 0f;
 
     private readonly List<SummonDefinition> definitions = new List<SummonDefinition>();
     private int gold;
@@ -42,6 +48,17 @@ public class SummonManager : MonoBehaviour
         BuildSummonPanel();
     }
 
+    private void Update()
+    {
+        goldTimer += Time.deltaTime;
+        if (goldTimer >= goldTickInterval)
+        {
+            gold += goldPerTick;
+            goldTimer -= goldTickInterval;
+            UpdateGoldText();
+        }
+    }
+
     public void Summon(SummonDefinition definition)
     {
         if (definition == null || definition.Prefab == null || gold < definition.Cost)
@@ -57,7 +74,34 @@ public class SummonManager : MonoBehaviour
 
         gold -= definition.Cost;
         UpdateGoldText();
-        Instantiate(definition.Prefab, position, Quaternion.identity);
+        // 召喚位置と左右交互の決定
+        // `TryGetSpawnPosition` は turret の場合 base スロットを返す（インクリメントは行わない）
+        GameObject instance = null;
+        if (definition.Type == SummonType.Turret)
+        {
+            bool spawnRight = spawnRightNext;
+            Vector3 spawnPos = position;
+            if (!spawnRight)
+            {
+                spawnPos.x = -spawnPos.x;
+            }
+
+            instance = Instantiate(definition.Prefab, spawnPos, Quaternion.identity);
+            FlipSpriteHorizontally(instance, !spawnRight);
+
+            // 右・左の両方を使ったら次のスロットへ
+            if (!spawnRight)
+            {
+                nextTurretSlot++;
+            }
+
+            spawnRightNext = !spawnRight;
+        }
+        else
+        {
+            instance = Instantiate(definition.Prefab, position, Quaternion.identity);
+            FlipSpriteHorizontally(instance, false);
+        }
     }
 
     private void LoadDefinitions()
@@ -87,6 +131,25 @@ public class SummonManager : MonoBehaviour
 
         position = worrierSpawnPosition;
         return true;
+    }
+
+    private void FlipSpriteHorizontally(GameObject go, bool flip)
+    {
+        if (go == null) return;
+        // SpriteRenderer に対して flipX を設定
+        var renderers = go.GetComponentsInChildren<SpriteRenderer>(true);
+        foreach (var r in renderers)
+        {
+            r.flipX = flip;
+        }
+
+        // もしスプライトが UI などで別実装なら localScale.x を反転する代替処理
+        if (renderers.Length == 0)
+        {
+            Vector3 s = go.transform.localScale;
+            s.x = Mathf.Abs(s.x) * (flip ? -1f : 1f);
+            go.transform.localScale = s;
+        }
     }
 
     private void BuildSummonPanel()
