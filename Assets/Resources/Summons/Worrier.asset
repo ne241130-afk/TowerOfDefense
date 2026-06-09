@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee4f91313a40455da40b5d4a23c92414, type: 3}
+  m_Name: Worrier
+  m_EditorClassIdentifier: Assembly-CSharp::SummonDefinition
+  displayName: Worrier
+  summonType: 1
+  prefab: {fileID: 200000, guid: 3d95720a03ae4fd0b2e389e61069f0aa, type: 3}
+  icon: {fileID: 1396496539497146251, guid: fc9755a4fcbe1480aa28ab6f464d7676, type: 3}
+  cost: 50
