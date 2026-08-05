@@ -2,7 +2,7 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 
-public class WaveManager : MonoBehaviour
+public class WaveManagerOld : MonoBehaviour
 {
     [SerializeField] private EnemySpawnController enemySpawnController;
     [SerializeField] private Canvas uiCanvas;
