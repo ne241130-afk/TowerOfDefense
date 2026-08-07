@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.UI;
+using TMPro;
 
 /// <summary>
 /// EconomyManager の currentMoney を UI に表示する簡易コンポーネント。
@@ -8,7 +8,7 @@ using UnityEngine.UI;
 public class MoneyUI : MonoBehaviour
 {
     public EconomyManager economyManager;
-    public Text moneyText; // UnityEngine.UI.Text を割り当て
+    public TextMeshProUGUI moneyText; // TextMeshProUGUI を割り当て
 
     private void Start()
     {

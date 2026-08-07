@@ -25,7 +25,14 @@ public class AnimalSpawner : MonoBehaviour, ITurnActor
 
     private void Start()
     {
-        TurnManager.Instance.Register(this);
+        if (TurnManager.Instance != null)
+        {
+            TurnManager.Instance.Register(this);
+        }
+        else
+        {
+            Debug.LogError("AnimalSpawner: TurnManager が見つかりません。");
+        }
     }
 
     private void OnDestroy()

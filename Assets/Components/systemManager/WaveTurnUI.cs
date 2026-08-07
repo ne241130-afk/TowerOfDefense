@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.UI;
+using TMPro;
 
 /// <summary>
 /// WaveManager の状態を Text に表示する軽量コンポーネント。
@@ -8,8 +8,8 @@ using UnityEngine.UI;
 public class WaveTurnUI : MonoBehaviour
 {
     public WaveManager waveManager;
-    public Text waveText;
-    public Text turnText;
+    public TextMeshProUGUI waveText;
+    public TextMeshProUGUI turnText;
 
     private void Start()
     {
