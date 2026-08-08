@@ -30,6 +30,26 @@ public class CardSlotUI : MonoBehaviour
     }
 
     /// <summary>
+    /// CardDeckManagerからカードを設定する。
+    /// </summary>
+    public void SetCard(CardData data)
+    {
+        cardData = data;
+
+        if (nameText != null)
+        {
+            nameText.text = cardData.cardName;
+        }
+
+        if (iconImage != null)
+        {
+            iconImage.sprite = cardData.icon;
+        }
+
+        SetSelectedVisual(false);
+    }
+
+    /// <summary>
     /// ButtonのOnClickイベントからこれを呼ぶ。
     /// </summary>
     public void OnClickCard()
@@ -46,10 +66,13 @@ public class CardSlotUI : MonoBehaviour
     }
 
     /// <summary>
-    /// カードを使い切ったときに呼ばれる。手札から取り除く。
+    /// カードを使ったときに呼ばれる。新しいカードを自動で山札から引く
     /// </summary>
     public void ConsumeCard()
     {
-        Destroy(gameObject);
+        if (CardDeckManager.Instance != null)
+        {
+            CardDeckManager.Instance.UseCard(cardData);
+        }
     }
 }

@@ -988,9 +988,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01d78cbd8c8b84f378408a9efb86f00c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WaveManager
-  turnsPerWave: 5
   currentWave: 1
   turnInWave: 0
+  turnsPerWave: 5
+  capturesPerWave: 3
   OnWaveStarted:
     m_PersistentCalls:
       m_Calls: []
@@ -1367,7 +1368,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -338, y: -253}
+  m_AnchoredPosition: {x: -300, y: -250}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &692885761
@@ -17750,6 +17751,170 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1116637193
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1116637195}
+  - component: {fileID: 1116637194}
+  m_Layer: 0
+  m_Name: CardDeckManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1116637194
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1116637193}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30eb3ae4ced2f4b63b504bfa1c7d4101, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CardDeckManager
+  deck:
+  - cardName: 
+    description: 
+    icon: {fileID: 0}
+    effectType: 0
+    areaRadius: 0
+    placedVisualPrefab: {fileID: 0}
+    cost: 0
+  - cardName: 
+    description: 
+    icon: {fileID: 0}
+    effectType: 1
+    areaRadius: 0
+    placedVisualPrefab: {fileID: 0}
+    cost: 0
+  - cardName: kusari
+    description: "\u9396\u3067\u3059"
+    icon: {fileID: 0}
+    effectType: 1
+    areaRadius: 0
+    placedVisualPrefab: {fileID: 0}
+    cost: 0
+  - cardName: kusari
+    description: "\u9396\u3067\u3059"
+    icon: {fileID: 0}
+    effectType: 1
+    areaRadius: 0
+    placedVisualPrefab: {fileID: 0}
+    cost: 0
+  - cardName: kusari
+    description: "\u9396\u3067\u3059"
+    icon: {fileID: 0}
+    effectType: 1
+    areaRadius: 0
+    placedVisualPrefab: {fileID: 0}
+    cost: 0
+  - cardName: kusari
+    description: "\u9396\u3067\u3059"
+    icon: {fileID: 0}
+    effectType: 1
+    areaRadius: 0
+    placedVisualPrefab: {fileID: 0}
+    cost: 0
+  - cardName: kusari
+    description: "\u9396\u3067\u3059"
+    icon: {fileID: 0}
+    effectType: 1
+    areaRadius: 0
+    placedVisualPrefab: {fileID: 0}
+    cost: 0
+  - cardName: kusari
+    description: "\u9396\u3067\u3059"
+    icon: {fileID: 0}
+    effectType: 1
+    areaRadius: 0
+    placedVisualPrefab: {fileID: 0}
+    cost: 0
+  - cardName: kusari
+    description: "\u9396\u3067\u3059"
+    icon: {fileID: 0}
+    effectType: 1
+    areaRadius: 0
+    placedVisualPrefab: {fileID: 0}
+    cost: 0
+  - cardName: kusari
+    description: "\u9396\u3067\u3059"
+    icon: {fileID: 0}
+    effectType: 1
+    areaRadius: 0
+    placedVisualPrefab: {fileID: 0}
+    cost: 0
+  - cardName: kusari
+    description: "\u9396\u3067\u3059"
+    icon: {fileID: 0}
+    effectType: 1
+    areaRadius: 0
+    placedVisualPrefab: {fileID: 0}
+    cost: 0
+  - cardName: kusari
+    description: "\u9396\u3067\u3059"
+    icon: {fileID: 0}
+    effectType: 1
+    areaRadius: 0
+    placedVisualPrefab: {fileID: 0}
+    cost: 0
+  - cardName: kusari
+    description: "\u9396\u3067\u3059"
+    icon: {fileID: 0}
+    effectType: 1
+    areaRadius: 0
+    placedVisualPrefab: {fileID: 0}
+    cost: 0
+  - cardName: kusari
+    description: "\u9396\u3067\u3059"
+    icon: {fileID: 0}
+    effectType: 1
+    areaRadius: 0
+    placedVisualPrefab: {fileID: 0}
+    cost: 0
+  - cardName: kusari
+    description: "\u9396\u3067\u3059"
+    icon: {fileID: 0}
+    effectType: 1
+    areaRadius: 0
+    placedVisualPrefab: {fileID: 0}
+    cost: 0
+  - cardName: kusari
+    description: "\u9396\u3067\u3059"
+    icon: {fileID: 0}
+    effectType: 1
+    areaRadius: 0
+    placedVisualPrefab: {fileID: 0}
+    cost: 0
+  hand: []
+  cardSlots:
+  - {fileID: 692885761}
+  - {fileID: 1596778372}
+  - {fileID: 1734196611}
+  - {fileID: 1615898778}
+  handSize: 4
+--- !u!4 &1116637195
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1116637193}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 672.85144, y: 249.20494, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1120945051
 GameObject:
   m_ObjectHideFlags: 0
@@ -18277,7 +18442,7 @@ RectTransform:
   m_GameObject: {fileID: 1596778370}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.06, y: 0.5, z: 1}
+  m_LocalScale: {x: 0.5, y: 4, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 987601962}
@@ -18285,7 +18450,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -485.1, y: -368.3}
+  m_AnchoredPosition: {x: -200, y: -250}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1596778372
@@ -18434,7 +18599,7 @@ RectTransform:
   m_GameObject: {fileID: 1615898776}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.06, y: 0.5, z: 1}
+  m_LocalScale: {x: 0.5, y: 4, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 513304756}
@@ -18442,7 +18607,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -435.7, y: -368.3}
+  m_AnchoredPosition: {x: 0, y: -250}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1615898778
@@ -18728,7 +18893,7 @@ RectTransform:
   m_GameObject: {fileID: 1734196609}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.06, y: 0.5, z: 1}
+  m_LocalScale: {x: 0.5, y: 4, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 50318082}
@@ -18736,7 +18901,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -452.6, y: -368.3}
+  m_AnchoredPosition: {x: -100, y: -250}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1734196611
@@ -19014,3 +19179,4 @@ SceneRoots:
   - {fileID: 241044767}
   - {fileID: 567539164}
   - {fileID: 1092146528}
+  - {fileID: 1116637195}
