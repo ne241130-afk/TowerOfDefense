@@ -152,11 +152,24 @@ public class CardPlacementController : MonoBehaviour
 
             if (visualPrefab != null)
             {
-                Instantiate(visualPrefab, FieldGridConfig.Instance.grid.GetCellCenterWorld(cell), Quaternion.identity);
+                Instantiate(
+                    visualPrefab,
+                    FieldGridConfig.Instance.grid.GetCellCenterWorld(cell),
+                    Quaternion.identity
+                );
             }
         }
-
+        
+        // カードを使用
         selectedSlot.ConsumeCard();
+
+        // カード選択を解除
         ClearSelection();
+
+        // カードを使用したので1ターン進める
+        if (TurnManager.Instance != null)
+        {
+            TurnManager.Instance.AdvanceTurn();
+        }
     }
 }
