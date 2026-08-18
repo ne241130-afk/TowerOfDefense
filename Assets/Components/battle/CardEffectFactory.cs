@@ -12,6 +12,9 @@ public static class CardEffectFactory
                 return new SwampFieldEffect();
             case CardEffectType.ChainLock:
                 return new ChainLockFieldEffect();
+            case CardEffectType.SummonHunter:
+                // ハンター召喚はIFieldEffectではなくCardPlacementController側で処理するため null を返す
+                return null;
             default:
                 return null;
         }

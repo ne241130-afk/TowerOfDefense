@@ -6,15 +6,18 @@ using UnityEngine;
 /// </summary>
 public enum CardEffectType
 {
-    Swamp,      // 沼地
-    ChainLock,  // 鎖(鍵)
+    Swamp,          // 沼地
+    ChainLock,      // 鎖(鍵)
+    SummonHunter,   // ハンター召喚
 }
 
 /// <summary>
-/// カード1枚分のデータ。CardSlotUIにアタッチされたMonoBehaviour上でInspector編集する想定。
+/// カード1枚分のデータ。Projectウィンドウでアセットとして作成し、
+/// CardDeckManagerのdeckリストにドラッグして使う。
+/// 右クリック → Create → TowerDefense → CardData で作成できる。
 /// </summary>
-[System.Serializable]
-public class CardData
+[CreateAssetMenu(fileName = "NewCardData", menuName = "TowerDefense/CardData")]
+public class CardData : ScriptableObject
 {
     [Header("基本情報")]
     public string cardName = "沼地";
@@ -33,4 +36,8 @@ public class CardData
 
     [Header("コスト(所持金システム導入時に使用予定。現状は未使用)")]
     public int cost = 50;
+
+    [Header("ハンター召喚(effectType == SummonHunter のときのみ使用)")]
+    [Tooltip("召喚するハンターのプレハブ。HunterControllerコンポーネントがアタッチされている必要がある")]
+    public GameObject hunterPrefab;
 }

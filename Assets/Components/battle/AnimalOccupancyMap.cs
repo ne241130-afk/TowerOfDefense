@@ -50,4 +50,17 @@ public class AnimalOccupancyMap : MonoBehaviour
     {
         return occupied.ContainsKey(cell);
     }
+
+    /// <summary>
+    /// 指定セルにいる動物を取得する。ハンターの範囲探索などに使う。
+    /// </summary>
+    public bool TryGetAnimalAt(Vector3Int cell, out AnimalController animal)
+    {
+        return occupied.TryGetValue(cell, out animal);
+    }
+
+    /// <summary>
+    /// フィールド上に存在するすべての動物。ハンターの対象探索などに使う。
+    /// </summary>
+    public IReadOnlyCollection<AnimalController> All => occupied.Values;
 }

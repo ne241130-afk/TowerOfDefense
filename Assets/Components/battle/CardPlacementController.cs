@@ -32,6 +32,9 @@ public class CardPlacementController : MonoBehaviour
     private readonly List<GameObject> highlightInstances = new List<GameObject>();
     private Vector3Int? lastHoverCell;
 
+    /// <summary>highlightPrefab未設定時に使うフォールバック用スプライト(起動時に1x1テクスチャから生成)。</summary>
+    private Sprite fallbackHighlightSprite;
+
     public bool HasSelection => selectedCard != null;
 
     private void Awake()
@@ -42,6 +45,12 @@ public class CardPlacementController : MonoBehaviour
             return;
         }
         Instance = this;
+
+        // highlightPrefabが未設定の場合に備えて1x1白スプライトを生成しておく
+        var tex = new Texture2D(1, 1);
+        tex.SetPixel(0, 0, Color.white);
+        tex.Apply();
+        fallbackHighlightSprite = Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
     }
 
     /// <summary>
@@ -107,19 +116,43 @@ public class CardPlacementController : MonoBehaviour
     {
         HideHighlights();
 
-        if (highlightPrefab == null || selectedCard == null) return;
+        if (selectedCard == null) return;
 
-        var cells = EffectAreaUtility.GetSquareArea(center, selectedCard.areaRadius);
+        // ハンター召喚カードは範囲設定を無視して中心の1マスのみハイライト
+        IReadOnlyList<Vector3Int> cells = selectedCard.effectType == CardEffectType.SummonHunter
+            ? new List<Vector3Int> { center }
+            : EffectAreaUtility.GetSquareArea(center, selectedCard.areaRadius);
+
         foreach (var cell in cells)
         {
             if (!FieldGridConfig.Instance.IsWalkable(cell)) continue;
 
-            var go = Instantiate(
-                highlightPrefab,
-                FieldGridConfig.Instance.grid.GetCellCenterWorld(cell),
-                Quaternion.identity);
+            Vector3 worldPos = FieldGridConfig.Instance.grid.GetCellCenterWorld(cell);
+            GameObject go = highlightPrefab != null
+                ? Instantiate(highlightPrefab, worldPos, Quaternion.identity)
+                : CreateFallbackHighlight(worldPos);
             highlightInstances.Add(go);
         }
+    }
+
+    /// <summary>
+    /// highlightPrefabが未設定の場合のフォールバックハイライト。
+    /// SpriteRendererで半透明オレンジのセルサイズ矩形を生成する。
+    /// </summary>
+    private GameObject CreateFallbackHighlight(Vector3 worldPos)
+    {
+        var go = new GameObject("HighlightFallback");
+        go.transform.position = worldPos;
+
+        var sr = go.AddComponent<SpriteRenderer>();
+        sr.sprite = fallbackHighlightSprite;
+        sr.color = new Color(1f, 0.7f, 0f, 0.4f);
+        sr.sortingOrder = 10;
+
+        Vector3 cellSize = FieldGridConfig.Instance.grid.cellSize;
+        go.transform.localScale = new Vector3(cellSize.x, cellSize.y, 1f);
+
+        return go;
     }
 
     private void HideHighlights()
@@ -133,7 +166,16 @@ public class CardPlacementController : MonoBehaviour
 
     private void TryPlaceAt(Vector3Int center)
     {
+        Debug.Log($"[CardPlacement] card=\"{selectedCard.cardName}\" effectType={(int)selectedCard.effectType}({selectedCard.effectType}) cell={center} walkable={FieldGridConfig.Instance.IsWalkable(center)}");
+
         if (!FieldGridConfig.Instance.IsWalkable(center)) return;
+
+        // ハンター召喚カードはIFieldEffectを使わず、プレハブを直接1体配置する
+        if (selectedCard.effectType == CardEffectType.SummonHunter)
+        {
+            PlaceHunter(center);
+            return;
+        }
 
         var cells = EffectAreaUtility.GetSquareArea(center, selectedCard.areaRadius);
 
@@ -171,5 +213,34 @@ public class CardPlacementController : MonoBehaviour
         {
             TurnManager.Instance.AdvanceTurn();
         }
+    }
+
+    /// <summary>
+    /// ハンター召喚カードの配置処理。指定セルにhunterPrefabを1体インスタンス化する。
+    /// placedVisualPrefab が設定されていればそのセルに背景スプライトを表示する。
+    /// </summary>
+    private void PlaceHunter(Vector3Int cell)
+    {
+        if (selectedCard.hunterPrefab == null)
+        {
+            Debug.LogWarning($"{selectedCard.cardName}: hunterPrefabが設定されていません。", this);
+            return;
+        }
+
+        Vector3 worldPos = FieldGridConfig.Instance.grid.GetCellCenterWorld(cell);
+        Instantiate(selectedCard.hunterPrefab, worldPos, Quaternion.identity);
+
+        // placedVisualPrefab（未設定時はdefaultPlacedEffectVisualPrefab）で配置先のセルに背景を表示
+        GameObject visualPrefab = selectedCard.placedVisualPrefab != null
+            ? selectedCard.placedVisualPrefab
+            : defaultPlacedEffectVisualPrefab;
+
+        if (visualPrefab != null)
+        {
+            Instantiate(visualPrefab, worldPos, Quaternion.identity);
+        }
+
+        selectedSlot.ConsumeCard();
+        ClearSelection();
     }
 }
