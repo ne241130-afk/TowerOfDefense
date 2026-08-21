@@ -35,6 +35,42 @@ public class CardDeckManager : MonoBehaviour
     {
         DrawInitialHand();
         UpdateHandUI();
+
+        // Wave終了時の招き猫ボーナスを購読
+        if (WaveManager.Instance != null)
+            WaveManager.Instance.OnWaveCompleted.AddListener(OnWaveCompleted);
+        else
+            Debug.LogWarning("CardDeckManager: WaveManager が見つかりません。招き猫のWave終了ボーナスが機能しません。");
+    }
+
+    private void OnDestroy()
+    {
+        if (WaveManager.Instance != null)
+            WaveManager.Instance.OnWaveCompleted.RemoveListener(OnWaveCompleted);
+    }
+
+    /// <summary>
+    /// Wave終了時に呼ばれる。手札に招き猫が残っていれば所持金を1.5倍にする。
+    /// 複数枚ある場合は1枚ごとに1.5倍を適用する。
+    /// </summary>
+    private void OnWaveCompleted(int completedWave)
+    {
+        if (EconomyManager.Instance == null) return;
+
+        int manekinNekoCount = 0;
+        foreach (var card in hand)
+        {
+            if (card != null && card.effectType == CardEffectType.ManekinNeko)
+                manekinNekoCount++;
+        }
+
+        for (int i = 0; i < manekinNekoCount; i++)
+        {
+            int current = EconomyManager.Instance.CurrentMoney;
+            int bonus = Mathf.RoundToInt(current * 0.5f);
+            EconomyManager.Instance.AddMoney(bonus);
+            Debug.Log($"[招き猫] Wave{completedWave} 終了ボーナス: {current} → {EconomyManager.Instance.CurrentMoney} (+{bonus})");
+        }
     }
 
     /// <summary>

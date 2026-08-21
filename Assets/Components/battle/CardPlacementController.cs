@@ -164,6 +164,21 @@ public class CardPlacementController : MonoBehaviour
 
     private void TryPlaceAt(Vector3Int center)
     {
+        // 招き猫はフィールド設置不要。どこかがクリックされた時点で即時発動する
+        if (selectedCard.effectType == CardEffectType.ManekinNeko)
+        {
+            if (EconomyManager.Instance != null && selectedCard.cost > 0)
+            {
+                if (!EconomyManager.Instance.TrySpend(selectedCard.cost))
+                {
+                    Debug.Log($"{selectedCard.cardName}: 所持金不足（必要: {selectedCard.cost}、所持: {EconomyManager.Instance.CurrentMoney}）");
+                    return;
+                }
+            }
+            UseManekinNeko();
+            return;
+        }
+
         if (!FieldGridConfig.Instance.IsWalkable(center)) return;
 
         // コスト確認・消費(所持金不足なら配置キャンセル)
@@ -193,6 +208,13 @@ public class CardPlacementController : MonoBehaviour
         if (selectedCard.effectType == CardEffectType.Fluit)
         {
             PlaceFluit(center);
+            return;
+        }
+
+        // 捕獲ネットランチャーは範囲内の動物を即時捕獲する
+        if (selectedCard.effectType == CardEffectType.NetLauncher)
+        {
+            PlaceNetLauncher(center);
             return;
         }
 
@@ -331,6 +353,65 @@ public class CardPlacementController : MonoBehaviour
             ? selectedCard.placedVisualPrefab
             : defaultPlacedEffectVisualPrefab;
         Instantiate(visualPrefab, worldPos, Quaternion.identity);
+
+        selectedSlot.ConsumeCard();
+        ClearSelection();
+        TurnManager.Instance?.AdvanceTurn();
+    }
+
+    /// <summary>
+    /// 捕獲ネットランチャーの処理。
+    /// areaRadius の範囲内にいるすべての動物を即時捕獲し、
+    /// placedVisualPrefab があればその位置に生成する(エフェクト用)。
+    /// 永続フィールドエフェクトは登録しない。
+    /// </summary>
+    private void PlaceNetLauncher(Vector3Int center)
+    {
+        var cells = EffectAreaUtility.GetSquareArea(center, selectedCard.areaRadius);
+
+        int captured = 0;
+        foreach (var cell in cells)
+        {
+            if (AnimalOccupancyMap.Instance == null) break;
+            if (!AnimalOccupancyMap.Instance.TryGetAnimalAt(cell, out var animal)) continue;
+            if (animal == null) continue;
+
+            Debug.Log($"[NetLauncher] {animal.Stats.animalName} を捕獲した！");
+            CaptureCounter.Instance?.AddCapture();
+            WaveManager.Instance?.AddCapture();
+            Destroy(animal.gameObject);
+            captured++;
+        }
+
+        Debug.Log($"[NetLauncher] {captured} 体を捕獲。");
+
+        // ビジュアルエフェクトを範囲中心に生成(設定されていれば)
+        GameObject visualPrefab = selectedCard.placedVisualPrefab != null
+            ? selectedCard.placedVisualPrefab
+            : defaultPlacedEffectVisualPrefab;
+        if (visualPrefab != null)
+        {
+            Vector3 worldPos = FieldGridConfig.Instance.grid.GetCellCenterWorld(center);
+            Instantiate(visualPrefab, worldPos, Quaternion.identity);
+        }
+
+        selectedSlot.ConsumeCard();
+        ClearSelection();
+        TurnManager.Instance?.AdvanceTurn();
+    }
+
+    /// <summary>
+    /// 招き猫カードの使用処理。
+    /// bonusAmount 分だけ即時所持金を増やし、カードを消費してターンを進める。
+    /// フィールドには何も置かない。
+    /// </summary>
+    private void UseManekinNeko()
+    {
+        if (selectedCard.bonusAmount > 0 && EconomyManager.Instance != null)
+        {
+            EconomyManager.Instance.AddMoney(selectedCard.bonusAmount);
+            Debug.Log($"[招き猫] {selectedCard.bonusAmount} 円獲得！ 現在の所持金: {EconomyManager.Instance.CurrentMoney}");
+        }
 
         selectedSlot.ConsumeCard();
         ClearSelection();

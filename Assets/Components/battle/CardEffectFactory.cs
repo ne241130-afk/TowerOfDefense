@@ -19,6 +19,12 @@ public static class CardEffectFactory
                 return new MeatFieldEffect();
             case CardEffectType.Fluit:
                 return new FluitFieldEffect();
+            case CardEffectType.NetLauncher:
+                // 即時捕獲のため永続エフェクトなし。CardPlacementController 側で処理する
+                return null;
+            case CardEffectType.ManekinNeko:
+                // 即時賞金効果のため永続エフェクトなし。CardPlacementController 側で処理する
+                return null;
             default:
                 return null;
         }

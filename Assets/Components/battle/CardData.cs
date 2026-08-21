@@ -11,6 +11,8 @@ public enum CardEffectType
     SummonHunter,   // ハンター召喚
     Meat,           // 肉(肉食動物を誘引)
     Fluit,          // 果物(草食動物を誘引)
+    NetLauncher,    // 捕獲ネットランチャー(範囲内の動物を即時捕獲)
+    ManekinNeko,    // 招き猫(使用時に江增加 / wave終了時に所持金×1.5)
 }
 
 /// <summary>
@@ -42,4 +44,8 @@ public class CardData : ScriptableObject
     [Header("ハンター召喚(effectType == SummonHunter のときのみ使用)")]
     [Tooltip("召喚するハンターのプレハブ。HunterControllerコンポーネントがアタッチされている必要がある")]
     public GameObject hunterPrefab;
+
+    [Header("招き猫(effectType == ManekinNeko のときのみ使用)")]
+    [Tooltip("使用時に増加する所持金。")]
+    public int bonusAmount = 100;
 }
