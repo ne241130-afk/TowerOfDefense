@@ -17,6 +17,7 @@ public class WaveManager : MonoBehaviour, ITurnActor
     public int capturesPerWave = 5; /// 捕獲数
 
     private int captureCount = 0; /// 
+    private int escapeCount = 0; /// 脱走数
 
     [Header("イベント（Inspector で UI 等を登録）")]
     public UnityEvent<int> OnWaveStarted;
@@ -53,6 +54,25 @@ public class WaveManager : MonoBehaviour, ITurnActor
         captureCount++;
 
         CheckWaveClear();
+    }
+
+    public void AddEscape()
+    {
+        escapeCount++;
+
+        Debug.Log($"脱走数: {escapeCount}");
+
+        if (escapeCount >= 5)
+        {
+            if (SimpleGameManager.Instance != null)
+            {
+                SimpleGameManager.Instance.GameOver();
+            }
+            else
+            {
+                Debug.LogError("SimpleGameManager が見つかりません。");
+            }
+        }
     }
 
     public void OnTurnTick()

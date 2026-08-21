@@ -786,8 +786,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SimpleGameManager
   gameOverSceneName: GameOverScene
-<<<<<<< Updated upstream
-=======
 --- !u!114 &1811331437
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -825,7 +823,6 @@ MonoBehaviour:
   OnTurnChanged:
     m_PersistentCalls:
       m_Calls: []
->>>>>>> Stashed changes
 --- !u!1 &1981671366
 GameObject:
   m_ObjectHideFlags: 0

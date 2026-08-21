@@ -152,7 +152,11 @@ public class AnimalController : MonoBehaviour, ITurnActor
         }
 
         Debug.Log($"{stats.animalName} が脱走した!");
-        // TODO: GameManager側の「脱走数カウント」加算処理をここから呼ぶ
+        // GameManager側の「脱走数カウント」加算処理をここから呼ぶ
+        if (WaveManager.Instance != null)
+        {
+            WaveManager.Instance.AddEscape();
+        }
         Destroy(gameObject);
     }
 }
