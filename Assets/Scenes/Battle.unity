@@ -1525,7 +1525,7 @@ MonoBehaviour:
   currentWave: 1
   turnInWave: 0
   turnsPerWave: 20
-  capturesPerWave: 3
+  capturesPerWave: 5
   OnWaveStarted:
     m_PersistentCalls:
       m_Calls: []

@@ -6,6 +6,7 @@ using UnityEngine.Events;
 /// </summary>
 public class WaveManager : MonoBehaviour, ITurnActor
 {
+    public static WaveManager Instance { get; private set; }
 
     [Header("状態（読み取り専用）")]
     public int currentWave = 1;
@@ -13,7 +14,7 @@ public class WaveManager : MonoBehaviour, ITurnActor
 
     [Header("Waveクリア条件")]
     public int turnsPerWave = 20; /// 何ターン経過か
-    public int capturesPerWave = 3; /// 捕獲数
+    public int capturesPerWave = 5; /// 捕獲数
 
     private int captureCount = 0; /// 
 
@@ -21,6 +22,11 @@ public class WaveManager : MonoBehaviour, ITurnActor
     public UnityEvent<int> OnWaveStarted;
     public UnityEvent<int> OnWaveCompleted;
     public UnityEvent<int> OnTurnChanged;
+
+    private void Awake()
+    {
+        Instance = this;
+    }
 
     private void Start()
     {

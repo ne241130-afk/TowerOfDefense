@@ -136,6 +136,13 @@ public class HunterController : MonoBehaviour, ITurnActor
     {
         Debug.Log($"{data.hunterName} が {target.Stats.animalName} を捕獲した!");
         CaptureCounter.Instance?.AddCapture();
+
+        // WaveManagerにも捕獲を通知
+        if (WaveManager.Instance != null)
+        {
+            WaveManager.Instance.AddCapture();
+        }
+
         Destroy(target.gameObject);
         currentTarget = null;
     }
