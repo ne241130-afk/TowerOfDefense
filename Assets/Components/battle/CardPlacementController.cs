@@ -166,8 +166,6 @@ public class CardPlacementController : MonoBehaviour
 
     private void TryPlaceAt(Vector3Int center)
     {
-        Debug.Log($"[CardPlacement] card=\"{selectedCard.cardName}\" effectType={(int)selectedCard.effectType}({selectedCard.effectType}) cell={center} walkable={FieldGridConfig.Instance.IsWalkable(center)}");
-
         if (!FieldGridConfig.Instance.IsWalkable(center)) return;
 
         // ハンター召喚カードはIFieldEffectを使わず、プレハブを直接1体配置する
@@ -242,5 +240,8 @@ public class CardPlacementController : MonoBehaviour
 
         selectedSlot.ConsumeCard();
         ClearSelection();
+
+        // カードを使用したので1ターン進める
+        TurnManager.Instance?.AdvanceTurn();
     }
 }

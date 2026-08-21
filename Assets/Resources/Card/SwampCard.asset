@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CardData
   cardName: "\u6CBC\u5730"
   description: "\u30A8\u30EA\u30A2\u5185\u306B\u6CBC\u3092\u751F\u6210\u3059\u308B\u3002\u6CBC\u306B\u3044\u308B\u52D5\u7269\u306E\u79FB\u52D5\u3092\u9045\u3089\u305B\u308B\u3002"
-  icon: {fileID: 0}
+  icon: {fileID: -4762150368521278425, guid: b846bcc996fea4bdc888e5e7e5d695a2, type: 3}
   effectType: 0
-  areaRadius: 0
-  placedVisualPrefab: {fileID: 0}
+  areaRadius: 2
+  placedVisualPrefab: {fileID: 1157414901737638771, guid: 71ac910a2a8124edf892debb9899f4a9, type: 3}
   cost: 50
   hunterPrefab: {fileID: 0}
