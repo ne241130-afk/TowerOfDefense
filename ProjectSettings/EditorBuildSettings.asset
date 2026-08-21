@@ -26,6 +26,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/example_ryo/Battle_ryo.unity
     guid: 6d88c06423fe24b809c3dcebf3d8fcba
+  - enabled: 1
+    path: Assets/Scenes/GameClearScene.unity
+    guid: 52eae532fe92c4933be54f7729aa2f93
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

@@ -69,6 +69,11 @@ public class SimpleGameManager : MonoBehaviour
         SceneManager.LoadScene(gameOverSceneName);
     }
 
+    public void GameClear()
+    {
+        UnityEngine.SceneManagement.SceneManager.LoadScene("GameClearScene");
+    }
+
     private void SaveLastGameScene(string sceneName, string scenePath)
     {
         PlayerPrefs.SetString(LastGameSceneKey, sceneName);

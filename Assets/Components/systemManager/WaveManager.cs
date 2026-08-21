@@ -96,6 +96,21 @@ public class WaveManager : MonoBehaviour, ITurnActor
         {
             OnWaveCompleted?.Invoke(currentWave);
 
+            // Wave 20をクリアしたらゲームクリア
+            if (currentWave >= 20)
+            {
+                if (SimpleGameManager.Instance != null)
+                {
+                    SimpleGameManager.Instance.GameClear();
+                }
+                else
+                {
+                    Debug.LogError("SimpleGameManager が見つかりません。");
+                }
+
+                return;
+            }
+
             currentWave++;
             turnInWave = 0;
             captureCount = 0;
