@@ -21,7 +21,8 @@ public class CardDescriptionUI : MonoBehaviour
         {
             descriptionText.text =
                 card.cardName + "\n\n" +
-                card.description;
+                card.description + "\n\n" +
+                "コスト：" + card.cost;
         }
     }
 }
