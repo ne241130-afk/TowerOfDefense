@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -68,6 +69,18 @@ public class AnimalController : MonoBehaviour, ITurnActor
 
     private void Move()
     {
+        // 誘引マスを取得(肉食動物は肉のマスなど)
+        List<Vector3Int> attractiveCells = FieldEffectMap.Instance != null
+            ? FieldEffectMap.Instance.GetAttractiveCells(this)
+            : new List<Vector3Int>();
+
+        // 現在いるマスが誘引マスなら移動せず待機する(食べている最中)
+        if (attractiveCells.Contains(CurrentCell)) return;
+
+        // 誘引マス(優先) + ゴールマスを合わせた目標リストでA*を実行
+        var goals = new List<Vector3Int>(attractiveCells);
+        goals.AddRange(FieldGridConfig.Instance.goalCells);
+
         for (int i = 0; i < stats.squaresPerTurn; i++)
         {
             if (IsAtGoal(CurrentCell))
@@ -78,7 +91,7 @@ public class AnimalController : MonoBehaviour, ITurnActor
 
             var path = AStarPathfinder.FindPath(
                 CurrentCell,
-                FieldGridConfig.Instance.goalCells,
+                goals,
                 FieldGridConfig.Instance.IsWalkable,
                 cell => AnimalOccupancyMap.Instance.IsOccupiedByOther(cell, this),
                 CostAt);
@@ -87,6 +100,9 @@ public class AnimalController : MonoBehaviour, ITurnActor
             if (path == null || path.Count < 2) return;
 
             EnterCell(path[1]);
+
+            // 誘引マスに到達したらそのマスで移動を止める
+            if (attractiveCells.Contains(CurrentCell)) return;
         }
 
         if (IsAtGoal(CurrentCell))

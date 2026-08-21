@@ -552,7 +552,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 2
+  m_SortingOrder: 3
   m_TargetDisplay: 0
 --- !u!224 &63750514
 RectTransform:
@@ -36458,7 +36458,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 2
   m_MaskInteraction: 0
   m_Sprite: {fileID: -3566721739996500971, guid: 9b5dab55172504339bfbd6be71b000bc, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -37575,8 +37575,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GridOverlay
   lineColor: {r: 0, g: 0, b: 0, a: 1}
-  lineWidth: 0.04
-  sortingOrder: 10
+  lineWidth: 0.5
+  sortingOrder: 1
 --- !u!4 &1657708399
 Transform:
   m_ObjectHideFlags: 0
@@ -38630,7 +38630,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingOrder: 2
   m_MaskInteraction: 0
   m_Sprite: {fileID: -8749856304994466748, guid: e67873672b0d44fc4b38505dc4783dc5, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}

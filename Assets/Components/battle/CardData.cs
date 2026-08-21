@@ -9,6 +9,7 @@ public enum CardEffectType
     Swamp,          // 沼地
     ChainLock,      // 鎖(鍵)
     SummonHunter,   // ハンター召喚
+    Meat,           // 肉(肉食動物を誘引)
 }
 
 /// <summary>

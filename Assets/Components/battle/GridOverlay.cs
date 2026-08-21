@@ -54,24 +54,36 @@ public class GridOverlay : MonoBehaviour
     private void BuildLines()
     {
         var tilemap = FieldGridConfig.Instance.walkableTilemap;
-        var grid    = FieldGridConfig.Instance.grid;
 
         tilemap.CompressBounds();
         var bounds = tilemap.cellBounds;
 
-        // 垂直線(各列の左端)
+        // Tilemap自身の座標系からセル境界を取得する
+        // 垂直線
         for (int x = bounds.xMin; x <= bounds.xMax; x++)
         {
-            Vector3 start = grid.CellToWorld(new Vector3Int(x, bounds.yMin, 0));
-            Vector3 end   = grid.CellToWorld(new Vector3Int(x, bounds.yMax, 0));
+            Vector3 start = tilemap.CellToWorld(
+                new Vector3Int(x, bounds.yMin, 0)
+            );
+
+            Vector3 end = tilemap.CellToWorld(
+                new Vector3Int(x, bounds.yMax, 0)
+            );
+
             CreateLine($"VLine_{x}", start, end);
         }
 
-        // 水平線(各行の下端)
+        // 水平線
         for (int y = bounds.yMin; y <= bounds.yMax; y++)
         {
-            Vector3 start = grid.CellToWorld(new Vector3Int(bounds.xMin, y, 0));
-            Vector3 end   = grid.CellToWorld(new Vector3Int(bounds.xMax, y, 0));
+            Vector3 start = tilemap.CellToWorld(
+                new Vector3Int(bounds.xMin, y, 0)
+            );
+
+            Vector3 end = tilemap.CellToWorld(
+                new Vector3Int(bounds.xMax, y, 0)
+            );
+
             CreateLine($"HLine_{y}", start, end);
         }
     }

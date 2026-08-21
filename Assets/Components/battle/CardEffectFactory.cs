@@ -15,6 +15,8 @@ public static class CardEffectFactory
             case CardEffectType.SummonHunter:
                 // ハンター召喚はIFieldEffectではなくCardPlacementController側で処理するため null を返す
                 return null;
+            case CardEffectType.Meat:
+                return new MeatFieldEffect();
             default:
                 return null;
         }

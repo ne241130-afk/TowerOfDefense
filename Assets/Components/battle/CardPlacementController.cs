@@ -183,6 +183,13 @@ public class CardPlacementController : MonoBehaviour
             return;
         }
 
+        // 肉カードもビジュアルを1つだけ中心セルに置く
+        if (selectedCard.effectType == CardEffectType.Meat)
+        {
+            PlaceMeat(center);
+            return;
+        }
+
         var cells = EffectAreaUtility.GetSquareArea(center, selectedCard.areaRadius);
 
         foreach (var cell in cells)
@@ -257,6 +264,40 @@ public class CardPlacementController : MonoBehaviour
         ClearSelection();
 
         // カードを使用したので1ターン進める
+        TurnManager.Instance?.AdvanceTurn();
+    }
+
+    /// <summary>
+    /// 肉カードの配置処理。中心セルにフィールドエフェクトを1つ登録し、
+    /// ビジュアルプレハブを1体だけ生成する。大きさはプレハブ側のスケールで調整できる。
+    /// </summary>
+    private void PlaceMeat(Vector3Int cell)
+    {
+        if (selectedCard.placedVisualPrefab == null && defaultPlacedEffectVisualPrefab == null)
+        {
+            Debug.LogWarning($"{selectedCard.cardName}: placedVisualPrefabが設定されていません。", this);
+            return;
+        }
+
+        // フィールドエフェクトを中心の1セルに登録
+        IFieldEffect effect = CardEffectFactory.CreateEffect(selectedCard.effectType);
+        if (effect != null)
+        {
+            // 誘引範囲をCardDataのareaRadiusから設定
+            if (effect is MeatFieldEffect meatEffect)
+                meatEffect.AttractionRange = selectedCard.areaRadius;
+            FieldEffectMap.Instance.SetEffect(cell, effect);
+        }
+
+        // ビジュアルを1つだけ中心ワールド座標に生成
+        Vector3 worldPos = FieldGridConfig.Instance.grid.GetCellCenterWorld(cell);
+        GameObject visualPrefab = selectedCard.placedVisualPrefab != null
+            ? selectedCard.placedVisualPrefab
+            : defaultPlacedEffectVisualPrefab;
+        Instantiate(visualPrefab, worldPos, Quaternion.identity);
+
+        selectedSlot.ConsumeCard();
+        ClearSelection();
         TurnManager.Instance?.AdvanceTurn();
     }
 }

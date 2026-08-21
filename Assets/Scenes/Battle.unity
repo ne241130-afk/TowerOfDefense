@@ -1134,7 +1134,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 34.25
+  orthographic size: 42
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -1709,9 +1709,10 @@ MonoBehaviour:
   spawnCell: {x: -10, y: -5, z: 0}
   turnsPerSpawn: 5
   animalPrefabs:
-  - {fileID: 3855809704159230568, guid: 6ce9abc99c06048ec81fc070c85c6539, type: 3}
   - {fileID: 5271801123675058674, guid: dcb825f83af1642769de10ef313f766f, type: 3}
+  - {fileID: 2599670119332685034, guid: 5184a845c33e74a73b5544f12e8a01f3, type: 3}
   - {fileID: 2521185303432786293, guid: 4209594c7963844a6b3ec0d8184e20d9, type: 3}
+  - {fileID: 8761484550491967488, guid: d08f384eceec74867b15b4508ed8fb73, type: 3}
 --- !u!4 &625395892
 Transform:
   m_ObjectHideFlags: 0
@@ -18166,10 +18167,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
   - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
   - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
-  - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
-  - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
-  - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
-  - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
+  - {fileID: 11400000, guid: b51a238a425444620b5509277c63bf20, type: 2}
+  - {fileID: 11400000, guid: b51a238a425444620b5509277c63bf20, type: 2}
+  - {fileID: 11400000, guid: b51a238a425444620b5509277c63bf20, type: 2}
+  - {fileID: 11400000, guid: b51a238a425444620b5509277c63bf20, type: 2}
   - {fileID: 11400000, guid: 9c7aca9523c064b38aeeae384b2295bf, type: 2}
   - {fileID: 11400000, guid: 9c7aca9523c064b38aeeae384b2295bf, type: 2}
   - {fileID: 11400000, guid: 9c7aca9523c064b38aeeae384b2295bf, type: 2}

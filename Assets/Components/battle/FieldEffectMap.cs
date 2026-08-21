@@ -23,6 +23,23 @@ public interface IFieldEffect
 }
 
 /// <summary>
+/// 特定の動物を引き寄せる効果を持つフィールドエフェクトが実装するインターフェース。
+/// IFieldEffect と合わせて実装し、FieldEffectMap.GetAttractiveCells で参照される。
+/// </summary>
+public interface IAttractiveEffect
+{
+    /// <summary>
+    /// 指定した動物をこのマスへ誘引するかどうか。
+    /// </summary>
+    bool IsAttractive(AnimalController animal);
+
+    /// <summary>
+    /// 誘引が有効な距離(Chebyshev距離)。0 = 無制限。
+    /// </summary>
+    int AttractionRange { get; }
+}
+
+/// <summary>
 /// セル座標(Vector3Int) → 妨害効果 の対応を管理するシングルトン。
 /// 既存のGrid/Tilemapとは別に、論理的な「効果レイヤー」として持つ。
 /// </summary>
@@ -56,4 +73,28 @@ public class FieldEffectMap : MonoBehaviour
     {
         return effects.TryGetValue(cell, out effect);
     }
+
+    /// <summary>
+    /// 指定した動物を誘引するマスの一覧を返す。
+    /// IAttractiveEffect を実装したエフェクトが設置されているセルのみが対象。
+    /// AttractionRange > 0 の場合、動物の現在地からその距離内にあるセルのみ返す。
+    /// </summary>
+    public List<Vector3Int> GetAttractiveCells(AnimalController animal)
+    {
+        var result = new List<Vector3Int>();
+        foreach (var pair in effects)
+        {
+            if (!(pair.Value is IAttractiveEffect attr)) continue;
+            if (!attr.IsAttractive(animal)) continue;
+
+            int range = attr.AttractionRange;
+            if (range > 0 && ChebyshevDistance(animal.CurrentCell, pair.Key) > range) continue;
+
+            result.Add(pair.Key);
+        }
+        return result;
+    }
+
+    private static int ChebyshevDistance(Vector3Int a, Vector3Int b)
+        => Mathf.Max(Mathf.Abs(a.x - b.x), Mathf.Abs(a.y - b.y));
 }
