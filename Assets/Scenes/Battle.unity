@@ -1796,7 +1796,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WaveManager
   currentWave: 1
   turnInWave: 0
-  turnsPerWave: 5
+  turnsPerWave: 20
   capturesPerWave: 3
   OnWaveStarted:
     m_PersistentCalls:

@@ -12,7 +12,7 @@ public class WaveManager : MonoBehaviour, ITurnActor
     public int turnInWave = 0;
 
     [Header("Waveクリア条件")]
-    public int turnsPerWave = 5; /// 何ターン経過か
+    public int turnsPerWave = 20; /// 何ターン経過か
     public int capturesPerWave = 3; /// 捕獲数
 
     private int captureCount = 0; /// 
