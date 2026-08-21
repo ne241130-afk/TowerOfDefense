@@ -78,6 +78,7 @@ public class WaveManager : MonoBehaviour, ITurnActor
     public void OnTurnTick()
     {
         turnInWave++;
+        Debug.Log("WaveManager: ターン " + turnInWave + " / " + turnsPerWave);
         OnTurnChanged?.Invoke(turnInWave);
         CheckWaveClear();
     }
