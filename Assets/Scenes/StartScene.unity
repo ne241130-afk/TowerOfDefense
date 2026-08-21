@@ -786,6 +786,46 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SimpleGameManager
   gameOverSceneName: GameOverScene
+<<<<<<< Updated upstream
+=======
+--- !u!114 &1811331437
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1811331434}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a699da3f927ae4cb28adc2268c0fc645, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TurnManager
+  autoTurnInterval: 1
+--- !u!114 &1811331438
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1811331434}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01d78cbd8c8b84f378408a9efb86f00c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WaveManager
+  turnsPerWave: 5
+  currentWave: 1
+  turnInWave: 0
+  OnWaveStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  OnWaveCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  OnTurnChanged:
+    m_PersistentCalls:
+      m_Calls: []
+>>>>>>> Stashed changes
 --- !u!1 &1981671366
 GameObject:
   m_ObjectHideFlags: 0

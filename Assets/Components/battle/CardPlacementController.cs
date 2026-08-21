@@ -189,6 +189,12 @@ public class CardPlacementController : MonoBehaviour
             PlaceMeat(center);
             return;
         }
+        
+        if (selectedCard.effectType == CardEffectType.Fluit)
+        {
+            PlaceFluit(center);
+            return;
+        }
 
         var cells = EffectAreaUtility.GetSquareArea(center, selectedCard.areaRadius);
 
@@ -286,6 +292,36 @@ public class CardPlacementController : MonoBehaviour
             // 誘引範囲をCardDataのareaRadiusから設定
             if (effect is MeatFieldEffect meatEffect)
                 meatEffect.AttractionRange = selectedCard.areaRadius;
+            FieldEffectMap.Instance.SetEffect(cell, effect);
+        }
+
+        // ビジュアルを1つだけ中心ワールド座標に生成
+        Vector3 worldPos = FieldGridConfig.Instance.grid.GetCellCenterWorld(cell);
+        GameObject visualPrefab = selectedCard.placedVisualPrefab != null
+            ? selectedCard.placedVisualPrefab
+            : defaultPlacedEffectVisualPrefab;
+        Instantiate(visualPrefab, worldPos, Quaternion.identity);
+
+        selectedSlot.ConsumeCard();
+        ClearSelection();
+        TurnManager.Instance?.AdvanceTurn();
+    }
+
+    private void PlaceFluit(Vector3Int cell)
+    {
+        if (selectedCard.placedVisualPrefab == null && defaultPlacedEffectVisualPrefab == null)
+        {
+            Debug.LogWarning($"{selectedCard.cardName}: placedVisualPrefabが設定されていません。", this);
+            return;
+        }
+
+        // フィールドエフェクトを中心の1セルに登録
+        IFieldEffect effect = CardEffectFactory.CreateEffect(selectedCard.effectType);
+        if (effect != null)
+        {
+            // 誘引範囲をCardDataのareaRadiusから設定
+            if (effect is FluitFieldEffect fluitEffect)
+                fluitEffect.AttractionRange = selectedCard.areaRadius;
             FieldEffectMap.Instance.SetEffect(cell, effect);
         }
 

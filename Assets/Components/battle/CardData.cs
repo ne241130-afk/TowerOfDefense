@@ -10,6 +10,7 @@ public enum CardEffectType
     ChainLock,      // 鎖(鍵)
     SummonHunter,   // ハンター召喚
     Meat,           // 肉(肉食動物を誘引)
+    Fluit,          // 果物(草食動物を誘引)
 }
 
 /// <summary>

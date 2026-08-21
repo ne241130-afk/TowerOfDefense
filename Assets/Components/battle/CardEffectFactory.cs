@@ -17,6 +17,8 @@ public static class CardEffectFactory
                 return null;
             case CardEffectType.Meat:
                 return new MeatFieldEffect();
+            case CardEffectType.Fluit:
+                return new FluitFieldEffect();
             default:
                 return null;
         }
