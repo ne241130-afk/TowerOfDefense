@@ -78,6 +78,11 @@ public class CardSlotUI : MonoBehaviour
         {
             CardPlacementController.Instance.SelectCard(cardData, this);
         }
+
+        if (CardDescriptionUI.Instance != null)
+        {
+            CardDescriptionUI.Instance.ShowCard(cardData);
+        }
     }
 
     public void SetSelectedVisual(bool selected)
