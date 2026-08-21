@@ -37,4 +37,7 @@ public class HunterData
 
     [Tooltip("動物を検知する範囲(Chebyshev距離)。0以下なら距離無制限")]
     public int detectionRange = 5;
+
+    [Tooltip("ハンターが行動できるエリアの半径(homeCellからのChebyshev距離)。0以下ならエリア制限なし")]
+    public int actionRadius = 0;
 }

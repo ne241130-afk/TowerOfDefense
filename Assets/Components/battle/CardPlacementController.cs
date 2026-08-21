@@ -118,10 +118,8 @@ public class CardPlacementController : MonoBehaviour
 
         if (selectedCard == null) return;
 
-        // ハンター召喚カードは範囲設定を無視して中心の1マスのみハイライト
-        IReadOnlyList<Vector3Int> cells = selectedCard.effectType == CardEffectType.SummonHunter
-            ? new List<Vector3Int> { center }
-            : EffectAreaUtility.GetSquareArea(center, selectedCard.areaRadius);
+        // ハンター召喚カードは範囲設定を他のカードと同様にareaRadiusで表示
+        IReadOnlyList<Vector3Int> cells = EffectAreaUtility.GetSquareArea(center, selectedCard.areaRadius);
 
         foreach (var cell in cells)
         {
@@ -167,6 +165,16 @@ public class CardPlacementController : MonoBehaviour
     private void TryPlaceAt(Vector3Int center)
     {
         if (!FieldGridConfig.Instance.IsWalkable(center)) return;
+
+        // コスト確認・消費(所持金不足なら配置キャンセル)
+        if (EconomyManager.Instance != null && selectedCard.cost > 0)
+        {
+            if (!EconomyManager.Instance.TrySpend(selectedCard.cost))
+            {
+                Debug.Log($"{selectedCard.cardName}: 所持金不足（必要: {selectedCard.cost}、所持: {EconomyManager.Instance.CurrentMoney}）");
+                return;
+            }
+        }
 
         // ハンター召喚カードはIFieldEffectを使わず、プレハブを直接1体配置する
         if (selectedCard.effectType == CardEffectType.SummonHunter)
@@ -226,7 +234,14 @@ public class CardPlacementController : MonoBehaviour
         }
 
         Vector3 worldPos = FieldGridConfig.Instance.grid.GetCellCenterWorld(cell);
-        Instantiate(selectedCard.hunterPrefab, worldPos, Quaternion.identity);
+        var instance = Instantiate(selectedCard.hunterPrefab, worldPos, Quaternion.identity);
+
+        // カードのareaRadiusをハンターのactionRadiusとして設定
+        var hunter = instance.GetComponent<HunterController>();
+        if (hunter != null)
+        {
+            hunter.data.actionRadius = selectedCard.areaRadius;
+        }
 
         // placedVisualPrefab（未設定時はdefaultPlacedEffectVisualPrefab）で配置先のセルに背景を表示
         GameObject visualPrefab = selectedCard.placedVisualPrefab != null

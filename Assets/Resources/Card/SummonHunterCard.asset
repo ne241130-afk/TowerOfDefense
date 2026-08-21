@@ -16,7 +16,7 @@ MonoBehaviour:
   description: "\u30A8\u30EA\u30A2\u5185\u306B\u6CBC\u3092\u751F\u6210\u3059\u308B\u3002\u6CBC\u306B\u3044\u308B\u52D5\u7269\u306E\u79FB\u52D5\u3092\u9045\u3089\u305B\u308B\u3002"
   icon: {fileID: 7865408360496738823, guid: 9ad0b0aabad9b40e9b13d75fd48ec207, type: 3}
   effectType: 2
-  areaRadius: 1
+  areaRadius: 3
   placedVisualPrefab: {fileID: 0}
   cost: 50
   hunterPrefab: {fileID: 3486390734863531089, guid: 0bd19f9fd4d7842a1a8748703e37fd31, type: 3}
