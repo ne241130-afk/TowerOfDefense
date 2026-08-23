@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CardData
   cardName: "\u30CF\u30F3\u30BF\u30FC"
   description: "\u52D5\u7269\u3092\u6355\u7372\u3059\u308B\u3002"
-  icon: {fileID: 7865408360496738823, guid: 9ad0b0aabad9b40e9b13d75fd48ec207, type: 3}
+  icon: {fileID: 362730189006845300, guid: 5369e423ab05a40febbf32cf146e7dee, type: 3}
   effectType: 2
   areaRadius: 3
   placedVisualPrefab: {fileID: 0}
