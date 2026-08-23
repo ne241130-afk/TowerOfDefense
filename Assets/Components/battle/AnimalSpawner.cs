@@ -67,6 +67,9 @@ public class AnimalSpawner : MonoBehaviour, ITurnActor
     [Tooltip("SpawnEntry で useDefaultSpawnCell = true、または RandomSpawnGroup の spawnCells が空のときに使用されるセル座標。")]
     public Vector3Int defaultSpawnCell = new Vector3Int(0, -16, 0);
 
+    [Tooltip("スポーン地点周囲のカード配置禁止範囲 (Chebyshev 距離)。0 = 禁止なし、1 = 1マス以内を禁止。")]
+    public int spawnProtectionRadius = 1;
+
     [Header("スポーンスケジュール（特定ターン指定）")]
     [Tooltip("wave・ターンごとの生成設定。特定のタイミングに特定の動物を出すときに使う。")]
     public List<SpawnEntry> schedule = new List<SpawnEntry>();
@@ -74,6 +77,9 @@ public class AnimalSpawner : MonoBehaviour, ITurnActor
     [Header("ランダムスポーングループ（インターバル型）")]
     [Tooltip("N ターンごとにプレハブ・座標をランダムで選んでスポーンするグループ。複数グループを登録可能。")]
     public List<RandomSpawnGroup> randomGroups = new List<RandomSpawnGroup>();
+
+    /// <summary>シーン内の全 AnimalSpawner インスタンス。カード配置制限の判定に使用する。</summary>
+    public static readonly HashSet<AnimalSpawner> All = new HashSet<AnimalSpawner>();
 
     // WaveManager に依存せず独自にターン数を管理する（登録順序に影響されない）
     private int myTurnInWave = 0;
@@ -85,6 +91,11 @@ public class AnimalSpawner : MonoBehaviour, ITurnActor
     // randomGroups 用リトライ（セルが占有中だった場合）
     private struct PendingRandomSpawn { public GameObject prefab; public Vector3Int cell; }
     private readonly List<PendingRandomSpawn> pendingRandomRetries = new List<PendingRandomSpawn>();
+
+    private void Awake()
+    {
+        All.Add(this);
+    }
 
     private void Start()
     {
@@ -106,6 +117,7 @@ public class AnimalSpawner : MonoBehaviour, ITurnActor
 
     private void OnDestroy()
     {
+        All.Remove(this);
         if (TurnManager.Instance != null) TurnManager.Instance.Unregister(this);
         if (WaveManager.Instance != null) WaveManager.Instance.OnWaveStarted.RemoveListener(OnWaveStarted);
     }
@@ -215,4 +227,43 @@ public class AnimalSpawner : MonoBehaviour, ITurnActor
         Debug.Log($"[AnimalSpawner] Wave{myCurrentWave} Turn{myTurnInWave}: {prefab.name} をスポーン (cell: {cell})");
         return true;
     }
+
+    // ──────────────────────────────────────
+    // スポーン保護ゾーン
+    // ──────────────────────────────────────
+
+    /// <summary>
+    /// このスポナーに登録されている全スポーンセルを列挙する。
+    /// defaultSpawnCell + schedule のカスタムセル + randomGroups の全セル。
+    /// </summary>
+    public System.Collections.Generic.IEnumerable<Vector3Int> GetAllSpawnCells()
+    {
+        yield return defaultSpawnCell;
+        foreach (var e in schedule)
+            if (!e.useDefaultSpawnCell)
+                yield return e.spawnCell;
+        foreach (var g in randomGroups)
+            if (g.spawnCells != null)
+                foreach (var c in g.spawnCells)
+                    yield return c;
+    }
+
+    /// <summary>
+    /// 指定セルがいずれかのスポナーの保護ゾーンに入っているかどうか。
+    /// 各スポナーノの spawnProtectionRadius を尊重する。
+    /// </summary>
+    public static bool IsForbidden(Vector3Int cell)
+    {
+        foreach (var spawner in All)
+        {
+            if (spawner.spawnProtectionRadius <= 0) continue;
+            foreach (var sc in spawner.GetAllSpawnCells())
+                if (ChebyshevDistance(sc, cell) <= spawner.spawnProtectionRadius)
+                    return true;
+        }
+        return false;
+    }
+
+    private static int ChebyshevDistance(Vector3Int a, Vector3Int b)
+        => Mathf.Max(Mathf.Abs(a.x - b.x), Mathf.Abs(a.y - b.y));
 }

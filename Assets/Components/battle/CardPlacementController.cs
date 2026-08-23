@@ -121,9 +121,31 @@ public class CardPlacementController : MonoBehaviour
         // ハンター召喚カードは範囲設定を他のカードと同様にareaRadiusで表示
         IReadOnlyList<Vector3Int> cells = EffectAreaUtility.GetSquareArea(center, selectedCard.areaRadius);
 
+        // スポーン保護ゾーンを先に赤で表示（試みから安全な配置場所を直感的に示す）
+        var highlightedCells = new HashSet<Vector3Int>();
+        foreach (var spawner in AnimalSpawner.All)
+        {
+            if (spawner.spawnProtectionRadius <= 0) continue;
+            int r = spawner.spawnProtectionRadius;
+            foreach (var sc in spawner.GetAllSpawnCells())
+            {
+                for (int dx = -r; dx <= r; dx++)
+                for (int dy = -r; dy <= r; dy++)
+                {
+                    var fc = new Vector3Int(sc.x + dx, sc.y + dy, sc.z);
+                    if (!FieldGridConfig.Instance.IsWalkable(fc)) continue;
+                    if (!highlightedCells.Add(fc)) continue; // 重複スキップ
+                    highlightInstances.Add(CreateForbiddenHighlight(
+                        FieldGridConfig.Instance.grid.GetCellCenterWorld(fc)));
+                }
+            }
+        }
+
+        // カード効果範囲をハイライト（保護ゾーンと重なるセルは既に赤が表示済み）
         foreach (var cell in cells)
         {
             if (!FieldGridConfig.Instance.IsWalkable(cell)) continue;
+            if (!highlightedCells.Add(cell)) continue; // 保護ゾーンと重なるのでスキップ
 
             Vector3 worldPos = FieldGridConfig.Instance.grid.GetCellCenterWorld(cell);
             GameObject go = highlightPrefab != null
@@ -145,6 +167,25 @@ public class CardPlacementController : MonoBehaviour
         var sr = go.AddComponent<SpriteRenderer>();
         sr.sprite = fallbackHighlightSprite;
         sr.color = new Color(1f, 0.7f, 0f, 0.4f);
+        sr.sortingOrder = 10;
+
+        Vector3 cellSize = FieldGridConfig.Instance.grid.cellSize;
+        go.transform.localScale = new Vector3(cellSize.x, cellSize.y, 1f);
+
+        return go;
+    }
+
+    /// <summary>
+    /// スポーン保護ゾーン用の赤ハイライト。設定プレハブに限らず常にプログラム生成する。
+    /// </summary>
+    private GameObject CreateForbiddenHighlight(Vector3 worldPos)
+    {
+        var go = new GameObject("HighlightForbidden");
+        go.transform.position = worldPos;
+
+        var sr = go.AddComponent<SpriteRenderer>();
+        sr.sprite = fallbackHighlightSprite;
+        sr.color = new Color(1f, 0.15f, 0.15f, 0.45f); // 薄い赤
         sr.sortingOrder = 10;
 
         Vector3 cellSize = FieldGridConfig.Instance.grid.cellSize;
@@ -180,6 +221,17 @@ public class CardPlacementController : MonoBehaviour
         }
 
         if (!FieldGridConfig.Instance.IsWalkable(center)) return;
+
+        // 効果範囲内にスポーン保護ゾーンが含まれていれば配置不可（中心だけでなく全セルをチェック）
+        var effectArea = EffectAreaUtility.GetSquareArea(center, selectedCard.areaRadius);
+        foreach (var ec in effectArea)
+        {
+            if (AnimalSpawner.IsForbidden(ec))
+            {
+                Debug.Log($"{selectedCard.cardName}: 効果範囲がスポーン保護ゾーンと重なっています。");
+                return;
+            }
+        }
 
         // コスト確認・消費(所持金不足なら配置キャンセル)
         if (EconomyManager.Instance != null && selectedCard.cost > 0)
@@ -223,6 +275,7 @@ public class CardPlacementController : MonoBehaviour
         foreach (var cell in cells)
         {
             if (!FieldGridConfig.Instance.IsWalkable(cell)) continue;
+            if (AnimalSpawner.IsForbidden(cell)) continue; // 保護ゾーンはスキップ
 
             IFieldEffect effect = CardEffectFactory.CreateEffect(selectedCard.effectType);
             if (effect == null) continue;
