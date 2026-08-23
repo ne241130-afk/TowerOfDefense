@@ -18,6 +18,7 @@ public class WaveManager : MonoBehaviour, ITurnActor
 
     private int captureCount = 0; /// 
     private int escapeCount = 0; /// 脱走数
+    public int EscapeCount => escapeCount;
 
     [Header("イベント（Inspector で UI 等を登録）")]
     public UnityEvent<int> OnWaveStarted;
