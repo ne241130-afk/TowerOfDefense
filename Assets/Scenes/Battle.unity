@@ -1754,12 +1754,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnimalSpawner
   defaultSpawnCell: {x: 0, y: -16, z: 0}
-  schedule:
+  schedule: []
+  randomGroups:
   - wave: 0
-    turnInWave: 1
-    animalPrefab: {fileID: 5271801123675058674, guid: dcb825f83af1642769de10ef313f766f, type: 3}
-    useDefaultSpawnCell: 1
-    spawnCell: {x: 0, y: 0, z: 0}
+    turnsPerSpawn: 4
+    animalPrefabs:
+    - {fileID: 5271801123675058674, guid: dcb825f83af1642769de10ef313f766f, type: 3}
+    - {fileID: 2599670119332685034, guid: 5184a845c33e74a73b5544f12e8a01f3, type: 3}
+    - {fileID: 8761484550491967488, guid: d08f384eceec74867b15b4508ed8fb73, type: 3}
+    - {fileID: 8761484550491967488, guid: 583dd6702c1fe40cc8e9c14e45049554, type: 3}
+    spawnCells:
+    - {x: -12, y: -5, z: 0}
+    - {x: -8, y: -5, z: 0}
 --- !u!4 &625395892
 Transform:
   m_ObjectHideFlags: 0
