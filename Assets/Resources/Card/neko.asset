@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: neko
   m_EditorClassIdentifier: Assembly-CSharp::CardData
   cardName: "\u62DB\u304D\u732B"
-  description: "\u6240\u6301\u91D1\u3092\u3075\u3084\u3059\u3002"
+  description: "\u6240\u6301\u91D1\u304C1.5\u500D\u306B\u306A\u308B\u3002"
   icon: {fileID: -8159511068255951181, guid: f45ecd8cbe3a6451ebc2bd2c993f213b, type: 3}
   effectType: 6
   areaRadius: 0

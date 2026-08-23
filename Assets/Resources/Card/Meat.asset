@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16e17906eadc2416e9f7642628909c1b, type: 3}
   m_Name: Meat
   m_EditorClassIdentifier: Assembly-CSharp::CardData
-  cardName: meat
+  cardName: "\u304A\u8089"
   description: "\u8089\u98DF\u52D5\u7269\u3092\u60F9\u304D\u3064\u3051\u308B"
   icon: {fileID: 6652356504360375386, guid: 032da191ca7634acaa52af1b6d4f5b96, type: 3}
   effectType: 3
@@ -20,3 +20,4 @@ MonoBehaviour:
   placedVisualPrefab: {fileID: 2072098958272619917, guid: d644731fe10a14b36b987c04e3741c3b, type: 3}
   cost: 50
   hunterPrefab: {fileID: 0}
+  bonusAmount: 100
