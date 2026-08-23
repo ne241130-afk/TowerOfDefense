@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16e17906eadc2416e9f7642628909c1b, type: 3}
   m_Name: neko
   m_EditorClassIdentifier: Assembly-CSharp::CardData
-  cardName: Fluit
-  description: "\u8089\u98DF\u52D5\u7269\u3092\u60F9\u304D\u3064\u3051\u308B"
+  cardName: "\u62DB\u304D\u732B"
+  description: "\u6240\u6301\u91D1\u3092\u3075\u3084\u3059\u3002"
   icon: {fileID: -8159511068255951181, guid: f45ecd8cbe3a6451ebc2bd2c993f213b, type: 3}
   effectType: 6
   areaRadius: 0

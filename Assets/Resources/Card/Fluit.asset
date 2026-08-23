@@ -12,11 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16e17906eadc2416e9f7642628909c1b, type: 3}
   m_Name: Fluit
   m_EditorClassIdentifier: Assembly-CSharp::CardData
-  cardName: Fluit
-  description: "\u8089\u98DF\u52D5\u7269\u3092\u60F9\u304D\u3064\u3051\u308B"
-  icon: {fileID: -8184444702343847808, guid: 933fc87e424f546f7aec47f9f2247746, type: 3}
+  cardName: "\u30D5\u30EB\u30FC\u30C4"
+  description: "\u8349\u98DF\u52D5\u7269\u3092\u60F9\u304D\u3064\u3051\u308B\u3002"
+  icon: {fileID: -5425696827673187023, guid: df4014cb18dd74419bc1aad1163c5787, type: 3}
   effectType: 4
   areaRadius: 4
   placedVisualPrefab: {fileID: 1557199215762807562, guid: 7d8ac2de1ebbc4e32951e4f317748a90, type: 3}
   cost: 50
   hunterPrefab: {fileID: 0}
+  bonusAmount: 100

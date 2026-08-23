@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16e17906eadc2416e9f7642628909c1b, type: 3}
   m_Name: net
   m_EditorClassIdentifier: Assembly-CSharp::CardData
-  cardName: Fluit
-  description: "\u8089\u98DF\u52D5\u7269\u3092\u60F9\u304D\u3064\u3051\u308B"
+  cardName: "\u6355\u7372\u30CD\u30C3\u30C8\u30E9\u30F3\u30C1\u30E3\u30FC"
+  description: "\u4E00\u5B9A\u7BC4\u56F2\u306E\u52D5\u7269\u3092\u6355\u7372\u3059\u308B\u3002"
   icon: {fileID: 294434920142312338, guid: c06d06e8d14cc4eb29be37c88839ed00, type: 3}
   effectType: 5
   areaRadius: 2
