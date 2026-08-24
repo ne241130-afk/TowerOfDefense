@@ -1756,12 +1756,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AnimalSpawner
   defaultSpawnCell: {x: 0, y: -16, z: 0}
   spawnProtectionRadius: 2
+<<<<<<< Updated upstream
   schedule:
   - wave: 99
     turnInWave: 15
     animalPrefab: {fileID: 2599670119332685034, guid: 5184a845c33e74a73b5544f12e8a01f3, type: 3}
     useDefaultSpawnCell: 0
     spawnCell: {x: -25, y: 16, z: 0}
+=======
+  schedule: []
+>>>>>>> Stashed changes
   randomGroups:
   - wave: 0
     turnsPerSpawn: 4
