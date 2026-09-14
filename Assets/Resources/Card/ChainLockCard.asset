@@ -17,7 +17,7 @@ MonoBehaviour:
   icon: {fileID: -5546766005772909724, guid: cdfa6f9ca94284d11945387cc4d39adb, type: 3}
   effectType: 1
   areaRadius: 0
-  placedVisualPrefab: {fileID: 0}
+  placedVisualPrefab: {fileID: 5837094463058875628, guid: 60f0e9464003a4a7fb7bbf4577b62c6e, type: 3}
   cost: 50
   hunterPrefab: {fileID: 0}
   bonusAmount: 100

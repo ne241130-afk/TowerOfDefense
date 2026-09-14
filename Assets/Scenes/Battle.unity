@@ -1181,7 +1181,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 19.5
+  orthographic size: 47.5
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -18317,6 +18317,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 84f4651d4e7a84ff4a8e367498b2336b, type: 2}
   - {fileID: 11400000, guid: 9c7aca9523c064b38aeeae384b2295bf, type: 2}
   - {fileID: 11400000, guid: 9c7aca9523c064b38aeeae384b2295bf, type: 2}
+  - {fileID: 11400000, guid: 8504b4edf88cf468f843ab2cc146b665, type: 2}
+  - {fileID: 11400000, guid: 8504b4edf88cf468f843ab2cc146b665, type: 2}
+  - {fileID: 11400000, guid: 8504b4edf88cf468f843ab2cc146b665, type: 2}
   hand: []
   cardSlots:
   - {fileID: 692885761}

@@ -270,6 +270,64 @@ public class CardPlacementController : MonoBehaviour
             return;
         }
 
+
+        //鎖で追加
+        if (selectedCard.effectType == CardEffectType.ChainLock)
+{
+    // 2つの出口で共有する鎖の効果を1つだけ作る
+    IFieldEffect chainEffect =
+        CardEffectFactory.CreateEffect(CardEffectType.ChainLock);
+
+    if (chainEffect != null)
+    {
+        foreach (var goalCell in FieldGridConfig.Instance.goalCells)
+        {
+            FieldEffectMap.Instance.SetEffect(goalCell, chainEffect);
+        }
+    }
+
+    // 鎖の見た目は2つの出口の中央に1つだけ表示
+    if (selectedCard.placedVisualPrefab != null &&
+        FieldGridConfig.Instance.goalCells.Count >= 2)
+    {
+        Vector3 pos1 =
+            FieldGridConfig.Instance.grid.GetCellCenterWorld(
+                FieldGridConfig.Instance.goalCells[0]);
+
+        Vector3 pos2 =
+            FieldGridConfig.Instance.grid.GetCellCenterWorld(
+                FieldGridConfig.Instance.goalCells[1]);
+
+        Vector3 visualPosition = (pos1 + pos2) / 2f;
+
+        // ここで鎖の画像を生成
+        GameObject chainVisual = Instantiate(
+            selectedCard.placedVisualPrefab,
+            visualPosition,
+            Quaternion.identity
+        );
+
+        // ChainLockFieldEffectに鎖の画像を渡す
+        if (chainEffect is ChainLockFieldEffect chainLockEffect)
+        {
+            chainLockEffect.SetVisual(chainVisual);
+        }
+    }
+
+    selectedSlot.ConsumeCard();
+    ClearSelection();
+
+    if (TurnManager.Instance != null)
+    {
+        TurnManager.Instance.AdvanceTurn();
+    }
+
+    return;
+}
+ 
+
+
+
         var cells = EffectAreaUtility.GetSquareArea(center, selectedCard.areaRadius);
 
         foreach (var cell in cells)
