@@ -1756,16 +1756,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AnimalSpawner
   defaultSpawnCell: {x: 0, y: -16, z: 0}
   spawnProtectionRadius: 2
-<<<<<<< Updated upstream
   schedule:
   - wave: 99
     turnInWave: 15
     animalPrefab: {fileID: 2599670119332685034, guid: 5184a845c33e74a73b5544f12e8a01f3, type: 3}
     useDefaultSpawnCell: 0
     spawnCell: {x: -25, y: 16, z: 0}
-=======
-  schedule: []
->>>>>>> Stashed changes
   randomGroups:
   - wave: 0
     turnsPerSpawn: 4
@@ -1775,6 +1771,9 @@ MonoBehaviour:
     - {fileID: 8761484550491967488, guid: d08f384eceec74867b15b4508ed8fb73, type: 3}
     - {fileID: 8761484550491967488, guid: 583dd6702c1fe40cc8e9c14e45049554, type: 3}
     - {fileID: 8761484550491967488, guid: ccb2150d600ae4445aee1c7fc38a7d75, type: 3}
+    - {fileID: 8761484550491967488, guid: 6313c850cc4d54d9f961b5b4d6f6073a, type: 3}
+    - {fileID: 2599670119332685034, guid: 9d6a19be25d524d2089963d4d0f17c3d, type: 3}
+    - {fileID: 2599670119332685034, guid: 774637304d3ad41a8b5dd132baf754a5, type: 3}
     spawnCells:
     - {x: -12, y: -5, z: 0}
     - {x: -8, y: -5, z: 0}
@@ -18308,8 +18307,8 @@ MonoBehaviour:
   deck:
   - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
   - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
-  - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
-  - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
+  - {fileID: 11400000, guid: 714c48c5d717a42638dc44eda4989188, type: 2}
+  - {fileID: 11400000, guid: 714c48c5d717a42638dc44eda4989188, type: 2}
   - {fileID: 11400000, guid: b0ce903f97522437ba1a7c365f90e7bf, type: 2}
   - {fileID: 11400000, guid: b0ce903f97522437ba1a7c365f90e7bf, type: 2}
   - {fileID: 11400000, guid: b51a238a425444620b5509277c63bf20, type: 2}
