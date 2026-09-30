@@ -8,7 +8,12 @@ using TMPro;
 public class MoneyUI : MonoBehaviour
 {
     public EconomyManager economyManager;
-    public TextMeshProUGUI moneyText; // TextMeshProUGUI を割り当て
+    public TextMeshProUGUI moneyText;
+
+    [Header("お金の増減エフェクト")]
+    public MoneyEffectUI moneyEffect;
+
+    private int previousMoney;
 
     private void Start()
     {
@@ -18,6 +23,7 @@ public class MoneyUI : MonoBehaviour
             enabled = false;
             return;
         }
+
         if (moneyText == null)
         {
             Debug.LogError("MoneyUI: moneyText を割り当ててください。");
@@ -26,6 +32,9 @@ public class MoneyUI : MonoBehaviour
         }
 
         economyManager.OnMoneyChanged.AddListener(OnMoneyChanged);
+
+        previousMoney = economyManager.CurrentMoney;
+
         UpdateDisplay(economyManager.CurrentMoney);
     }
 
@@ -39,7 +48,30 @@ public class MoneyUI : MonoBehaviour
 
     private void OnMoneyChanged(int newAmount)
     {
+        Debug.Log($"MoneyUI [{gameObject.name}] : {previousMoney} → {newAmount}");
+
+        if (newAmount > previousMoney)
+        {
+            Debug.Log("★★★ MoneyUI → ShowUp ★★★");
+
+            if (moneyEffect != null)
+            {
+                moneyEffect.ShowUp();
+            }
+        }
+        else if (newAmount < previousMoney)
+        {
+            Debug.Log("★★★ MoneyUI → ShowDown ★★★");
+
+            if (moneyEffect != null)
+            {
+                moneyEffect.ShowDown();
+            }
+        }
+
         UpdateDisplay(newAmount);
+
+        previousMoney = newAmount;
     }
 
     private void UpdateDisplay(int amount)
