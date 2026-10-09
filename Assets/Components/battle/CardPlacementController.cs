@@ -490,6 +490,7 @@ public class CardPlacementController : MonoBehaviour
             Debug.Log($"[NetLauncher] {animal.Stats.animalName} を捕獲した！");
             CaptureCounter.Instance?.AddCapture();
             WaveManager.Instance?.AddCapture();
+            animal.RemoveFromBoard();
             Destroy(animal.gameObject);
             captured++;
         }

@@ -222,7 +222,10 @@ public class AnimalSpawner : MonoBehaviour, ITurnActor
         // AnimalController.Start() より前に占有を登録し、同ターン内の経路探索干渉を防ぐ
         var controller = obj.GetComponent<AnimalController>();
         if (controller != null && AnimalOccupancyMap.Instance != null)
+        {
+            controller.InitializeAtCell(cell);
             AnimalOccupancyMap.Instance.SetOccupied(cell, controller);
+        }
 
         Debug.Log($"[AnimalSpawner] Wave{myCurrentWave} Turn{myTurnInWave}: {prefab.name} をスポーン (cell: {cell})");
         return true;

@@ -143,6 +143,7 @@ public class HunterController : MonoBehaviour, ITurnActor
             WaveManager.Instance.AddCapture();
         }
 
+        target.RemoveFromBoard();
         Destroy(target.gameObject);
         currentTarget = null;
     }

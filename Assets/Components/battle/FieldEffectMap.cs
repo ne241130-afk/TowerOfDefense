@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -48,6 +49,7 @@ public class FieldEffectMap : MonoBehaviour
     public static FieldEffectMap Instance { get; private set; }
 
     private readonly Dictionary<Vector3Int, IFieldEffect> effects = new Dictionary<Vector3Int, IFieldEffect>();
+    public event Action EffectsChanged;
 
     private void Awake()
     {
@@ -62,11 +64,15 @@ public class FieldEffectMap : MonoBehaviour
     public void SetEffect(Vector3Int cell, IFieldEffect effect)
     {
         effects[cell] = effect;
+        EffectsChanged?.Invoke();
     }
 
     public void RemoveEffect(Vector3Int cell)
     {
-        effects.Remove(cell);
+        if (effects.Remove(cell))
+        {
+            EffectsChanged?.Invoke();
+        }
     }
 
     public bool TryGetEffect(Vector3Int cell, out IFieldEffect effect)
