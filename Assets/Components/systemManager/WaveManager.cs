@@ -40,6 +40,8 @@ public class WaveManager : MonoBehaviour, ITurnActor
         {
             Debug.LogWarning("WaveManager: TurnManager が見つかりません");
         }
+
+        AnimalPathVisualizer.RequestRefresh();
     }
 
     private void OnDestroy()
@@ -88,6 +90,7 @@ public class WaveManager : MonoBehaviour, ITurnActor
     {
         currentWave = Mathf.Max(1, startWave);
         turnInWave = 0;
+        AnimalPathVisualizer.RequestRefresh();
     }
 
     private void CheckWaveClear()
@@ -117,6 +120,7 @@ public class WaveManager : MonoBehaviour, ITurnActor
             captureCount = 0;
 
             OnWaveStarted?.Invoke(currentWave);
+            AnimalPathVisualizer.RequestRefresh();
         }
     }
 }

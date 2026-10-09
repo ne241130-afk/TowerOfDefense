@@ -28,6 +28,7 @@ public class FieldGridConfig : MonoBehaviour
             return;
         }
         Instance = this;
+        AnimalPathVisualizer.EnsureAttached(this);
     }
 
     public bool IsWalkable(Vector3Int cell)

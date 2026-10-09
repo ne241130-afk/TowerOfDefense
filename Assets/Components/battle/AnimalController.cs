@@ -17,12 +17,14 @@ public class AnimalController : MonoBehaviour, ITurnActor
 
     public AnimalStats Stats => stats;
     public Vector3Int CurrentCell { get; private set; }
+    public bool HasInitializedCell { get; private set; }
 
     // 足止め残りターン数(沼地・鎖などから加算される)
     private int moveDelayTurns = 0;
 
     // 「Nターンに1回しか動けない」動物用のカウンタ
     private int turnCounter = 0;
+    private bool removedFromBoard = false;
 
     private void Start()
     {
@@ -32,15 +34,37 @@ public class AnimalController : MonoBehaviour, ITurnActor
             return;
         }
 
-        CurrentCell = FieldGridConfig.Instance.grid.WorldToCell(transform.position);
+        if (!HasInitializedCell)
+        {
+            CurrentCell = FieldGridConfig.Instance.grid.WorldToCell(transform.position);
+            HasInitializedCell = true;
+        }
+
         AnimalOccupancyMap.Instance.SetOccupied(CurrentCell, this);
         TurnManager.Instance.Register(this);
+        AnimalPathVisualizer.RequestRefresh();
     }
 
     private void OnDestroy()
     {
+        RemoveFromBoard();
+        AnimalPathVisualizer.RequestRefresh();
+    }
+
+    public void InitializeAtCell(Vector3Int cell)
+    {
+        CurrentCell = cell;
+        HasInitializedCell = true;
+    }
+
+    public void RemoveFromBoard()
+    {
+        if (removedFromBoard) return;
+
         if (TurnManager.Instance != null) TurnManager.Instance.Unregister(this);
         if (AnimalOccupancyMap.Instance != null) AnimalOccupancyMap.Instance.ClearOccupied(CurrentCell, this);
+
+        removedFromBoard = true;
     }
 
     /// <summary>
@@ -50,6 +74,7 @@ public class AnimalController : MonoBehaviour, ITurnActor
     {
         if (turns <= 0) return;
         moveDelayTurns += turns;
+        AnimalPathVisualizer.RequestRefresh();
     }
 
     public void OnTurnTick()
@@ -61,25 +86,47 @@ public class AnimalController : MonoBehaviour, ITurnActor
         }
 
         turnCounter++;
-        if (turnCounter < stats.turnsPerMove) return;
+        if (turnCounter < Mathf.Max(1, stats.turnsPerMove)) return;
         turnCounter = 0;
 
         Move();
     }
 
+    public bool TryGetPlannedPath(out List<Vector3Int> path)
+    {
+        path = null;
+
+        if (FieldGridConfig.Instance == null || FieldGridConfig.Instance.grid == null || !HasInitializedCell)
+        {
+            return false;
+        }
+
+        List<Vector3Int> attractiveCells = GetAttractiveCells();
+        if (attractiveCells.Contains(CurrentCell)) return false;
+
+        return TryFindPath(BuildGoals(attractiveCells), out path);
+    }
+
+    public bool TryGetNextMovePreview(out Vector3Int nextCell)
+    {
+        nextCell = default;
+
+        if (!WillMoveOnNextTurn()) return false;
+        if (!TryGetPlannedPath(out List<Vector3Int> path)) return false;
+
+        nextCell = path[1];
+        return true;
+    }
+
     private void Move()
     {
-        // 誘引マスを取得(肉食動物は肉のマスなど)
-        List<Vector3Int> attractiveCells = FieldEffectMap.Instance != null
-            ? FieldEffectMap.Instance.GetAttractiveCells(this)
-            : new List<Vector3Int>();
+        List<Vector3Int> attractiveCells = GetAttractiveCells();
 
         // 現在いるマスが誘引マスなら移動せず待機する(食べている最中)
         if (attractiveCells.Contains(CurrentCell)) return;
 
         // 誘引マス(優先) + ゴールマスを合わせた目標リストでA*を実行
-        var goals = new List<Vector3Int>(attractiveCells);
-        goals.AddRange(FieldGridConfig.Instance.goalCells);
+        List<Vector3Int> goals = BuildGoals(attractiveCells);
 
         for (int i = 0; i < stats.squaresPerTurn; i++)
         {
@@ -89,15 +136,7 @@ public class AnimalController : MonoBehaviour, ITurnActor
                 return;
             }
 
-            var path = AStarPathfinder.FindPath(
-                CurrentCell,
-                goals,
-                FieldGridConfig.Instance.IsWalkable,
-                cell => AnimalOccupancyMap.Instance.IsOccupiedByOther(cell, this),
-                CostAt);
-
-            // 経路が見つからない(他の動物や妨害効果で完全に塞がれている)場合はこのターン待機
-            if (path == null || path.Count < 2) return;
+            if (!TryFindPath(goals, out List<Vector3Int> path)) return;
 
             EnterCell(path[1]);
 
@@ -132,6 +171,7 @@ public class AnimalController : MonoBehaviour, ITurnActor
         CurrentCell = cell;
         transform.position = FieldGridConfig.Instance.grid.GetCellCenterWorld(cell);
         AnimalOccupancyMap.Instance.SetOccupied(cell, this);
+        AnimalPathVisualizer.RequestRefresh();
 
         // ゴールマスの効果はTryExit側で処理するので、通過中のマスのみここで適用する
         if (!IsAtGoal(cell) &&
@@ -157,6 +197,40 @@ public class AnimalController : MonoBehaviour, ITurnActor
         {
             WaveManager.Instance.AddEscape();
         }
+        RemoveFromBoard();
+        AnimalPathVisualizer.RequestRefresh();
         Destroy(gameObject);
+    }
+
+    private List<Vector3Int> GetAttractiveCells()
+    {
+        return FieldEffectMap.Instance != null
+            ? FieldEffectMap.Instance.GetAttractiveCells(this)
+            : new List<Vector3Int>();
+    }
+
+    private List<Vector3Int> BuildGoals(List<Vector3Int> attractiveCells)
+    {
+        var goals = new List<Vector3Int>(attractiveCells);
+        goals.AddRange(FieldGridConfig.Instance.goalCells);
+        return goals;
+    }
+
+    private bool TryFindPath(IReadOnlyList<Vector3Int> goals, out List<Vector3Int> path)
+    {
+        path = AStarPathfinder.FindPath(
+            CurrentCell,
+            goals,
+            FieldGridConfig.Instance.IsWalkable,
+            cell => AnimalOccupancyMap.Instance.IsOccupiedByOther(cell, this),
+            CostAt);
+
+        return path != null && path.Count >= 2;
+    }
+
+    private bool WillMoveOnNextTurn()
+    {
+        if (moveDelayTurns > 0) return false;
+        return turnCounter + 1 >= Mathf.Max(1, stats.turnsPerMove);
     }
 }

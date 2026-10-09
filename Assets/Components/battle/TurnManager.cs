@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -26,6 +27,7 @@ public class TurnManager : MonoBehaviour
     private float autoTimer = 0f;
 
     public int CurrentTurn { get; private set; } = 0;
+    public event Action TurnAdvanced;
 
     private void Awake()
     {
@@ -72,5 +74,7 @@ public class TurnManager : MonoBehaviour
         {
             actor.OnTurnTick();
         }
+
+        TurnAdvanced?.Invoke();
     }
 }
