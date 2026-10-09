@@ -15,12 +15,12 @@ public class AnimalPathVisualizer : MonoBehaviour
     [Header("経路表示")]
     [SerializeField] private Color pathColor = new Color(1f, 0.1f, 0.1f, 0.9f);
     [SerializeField] private float lineWidth = 0.08f;
-    [SerializeField] private int pathSortingOrder = 12;
+    [SerializeField] private int pathSortingOrder = 100;
     [SerializeField] private float pathOffsetRatio = 0.12f;
 
     [Header("次マスハイライト")]
     [SerializeField] private Color highlightColor = new Color(1f, 0.1f, 0.1f, 0.28f);
-    [SerializeField] private int highlightSortingOrder = 11;
+    [SerializeField] private int highlightSortingOrder = 101;
     [SerializeField] private float highlightScale = 0.92f;
 
     [Header("点線")]
@@ -43,6 +43,21 @@ public class AnimalPathVisualizer : MonoBehaviour
         TryCreateInstance();
     }
 
+    public static AnimalPathVisualizer EnsureAttached(FieldGridConfig fieldGrid)
+    {
+        if (fieldGrid == null) return null;
+
+        if (fieldGrid.TryGetComponent<AnimalPathVisualizer>(out var existingOnField))
+        {
+            Instance = existingOnField;
+            return existingOnField;
+        }
+
+        AnimalPathVisualizer visualizer = fieldGrid.gameObject.AddComponent<AnimalPathVisualizer>();
+        Instance = visualizer;
+        return visualizer;
+    }
+
     public static void RequestRefresh()
     {
         if (!TryCreateInstance()) return;
@@ -53,7 +68,9 @@ public class AnimalPathVisualizer : MonoBehaviour
     {
         if (Instance != null) return true;
 
-        FieldGridConfig fieldGrid = FindFirstObjectByType<FieldGridConfig>();
+        FieldGridConfig fieldGrid = FieldGridConfig.Instance != null
+            ? FieldGridConfig.Instance
+            : FindFirstObjectByType<FieldGridConfig>();
         if (fieldGrid == null) return false;
 
         AnimalPathVisualizer existing = FindFirstObjectByType<AnimalPathVisualizer>();
@@ -63,9 +80,7 @@ public class AnimalPathVisualizer : MonoBehaviour
             return true;
         }
 
-        var go = new GameObject(VisualizerObjectName);
-        Instance = go.AddComponent<AnimalPathVisualizer>();
-        return true;
+        return EnsureAttached(fieldGrid) != null;
     }
 
     private void Awake()
@@ -293,6 +308,7 @@ public class AnimalPathVisualizer : MonoBehaviour
         line.endWidth = lineWidth;
         line.startColor = pathColor;
         line.endColor = pathColor;
+        line.sortingLayerName = "Default";
         line.sortingOrder = pathSortingOrder;
         line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         line.receiveShadows = false;
@@ -319,6 +335,7 @@ public class AnimalPathVisualizer : MonoBehaviour
         Color color = highlightColor;
         color.a = Mathf.Min(0.7f, highlightColor.a + (overlapCount - 1) * 0.12f);
         spriteRenderer.color = color;
+        spriteRenderer.sortingLayerName = "Default";
         spriteRenderer.sortingOrder = highlightSortingOrder;
 
         Vector3 cellSize = FieldGridConfig.Instance.grid.cellSize;
