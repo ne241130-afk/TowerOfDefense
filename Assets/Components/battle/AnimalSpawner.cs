@@ -34,6 +34,9 @@ public class RandomSpawnGroup
     [Tooltip("発動する wave 番号。0 以下なら全 wave で発動。")]
     public int wave = 0;
 
+    [Tooltip("発動する最後のWave番号。0以下ならwaveと同じWaveだけで発動。waveが0以下の場合は無視される。")]
+    public int waveEnd = 0;
+
     [Tooltip("何ターンごとに1体生成するか。")]
     public int turnsPerSpawn = 3;
 
@@ -174,7 +177,18 @@ public class AnimalSpawner : MonoBehaviour, ITurnActor
         {
             if (group.animalPrefabs == null || group.animalPrefabs.Count == 0) continue;
 
-            bool waveMatch = group.wave <= 0 || group.wave == myCurrentWave;
+            //
+            bool waveMatch;
+            if (group.wave <= 0){ // waveが0以下なら全Waveで動作
+             waveMatch = true;
+            }
+            else{ // waveEndが0以下なら、指定した1つのWaveだけで動作
+             int endWave = group.waveEnd >= group.wave
+             ? group.waveEnd
+             : group.wave;
+             waveMatch = myCurrentWave >= group.wave
+             && myCurrentWave <= endWave;
+            }
             if (!waveMatch) continue;
 
             group.turnCounter++;
@@ -184,13 +198,29 @@ public class AnimalSpawner : MonoBehaviour, ITurnActor
             // プレハブをランダム選択
             GameObject prefab = group.animalPrefabs[Random.Range(0, group.animalPrefabs.Count)];
 
-            // 座標をランダム選択（リストが空なら defaultSpawnCell）
-            Vector3Int cell = (group.spawnCells != null && group.spawnCells.Count > 0)
-                ? group.spawnCells[Random.Range(0, group.spawnCells.Count)]
-                : defaultSpawnCell;
-
-            if (!TrySpawnAt(prefab, cell))
-                pendingRandomRetries.Add(new PendingRandomSpawn { prefab = prefab, cell = cell });
+            //
+            // 登録された全スポーン地点から1体ずつ出現させる。
+            // スポーン地点が未登録なら、従来どおりdefaultSpawnCellを使う。
+            if (group.spawnCells != null && group.spawnCells.Count > 0){
+                foreach (Vector3Int cell in group.spawnCells){
+                    if (!TrySpawnAt(prefab, cell)){
+                        // セルが占有中なら、その地点だけ次ターンに再試行する
+                        pendingRandomRetries.Add(
+                            new PendingRandomSpawn{
+                            prefab = prefab,
+                            cell = cell
+                        });
+                    }
+                }
+            }else{
+                if (!TrySpawnAt(prefab, defaultSpawnCell)){
+                    pendingRandomRetries.Add(
+                        new PendingRandomSpawn{
+                            prefab = prefab,
+                            cell = defaultSpawnCell
+                        });
+                }
+            }
         }
     }
 

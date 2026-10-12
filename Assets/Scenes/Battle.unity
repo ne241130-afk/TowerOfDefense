@@ -2262,6 +2262,7 @@ MonoBehaviour:
     spawnCell: {x: 4, y: -2, z: 0}
   randomGroups:
   - wave: 0
+    waveEnd: 0
     turnsPerSpawn: 4
     animalPrefabs:
     - {fileID: 5271801123675058674, guid: dcb825f83af1642769de10ef313f766f, type: 3}
@@ -2273,6 +2274,66 @@ MonoBehaviour:
     - {fileID: 2599670119332685034, guid: 9d6a19be25d524d2089963d4d0f17c3d, type: 3}
     - {fileID: 2599670119332685034, guid: 774637304d3ad41a8b5dd132baf754a5, type: 3}
     spawnCells: []
+  - wave: 1
+    waveEnd: 3
+    turnsPerSpawn: 4
+    animalPrefabs:
+    - {fileID: 5271801123675058674, guid: dcb825f83af1642769de10ef313f766f, type: 3}
+    - {fileID: 2599670119332685034, guid: 5184a845c33e74a73b5544f12e8a01f3, type: 3}
+    - {fileID: 8761484550491967488, guid: d08f384eceec74867b15b4508ed8fb73, type: 3}
+    - {fileID: 8761484550491967488, guid: 583dd6702c1fe40cc8e9c14e45049554, type: 3}
+    - {fileID: 8761484550491967488, guid: ccb2150d600ae4445aee1c7fc38a7d75, type: 3}
+    - {fileID: 8761484550491967488, guid: 6313c850cc4d54d9f961b5b4d6f6073a, type: 3}
+    - {fileID: 2599670119332685034, guid: 9d6a19be25d524d2089963d4d0f17c3d, type: 3}
+    - {fileID: 2599670119332685034, guid: 774637304d3ad41a8b5dd132baf754a5, type: 3}
+    spawnCells:
+    - {x: 0, y: -2, z: 0}
+  - wave: 4
+    waveEnd: 10
+    turnsPerSpawn: 3
+    animalPrefabs:
+    - {fileID: 5271801123675058674, guid: dcb825f83af1642769de10ef313f766f, type: 3}
+    - {fileID: 2599670119332685034, guid: 5184a845c33e74a73b5544f12e8a01f3, type: 3}
+    - {fileID: 8761484550491967488, guid: d08f384eceec74867b15b4508ed8fb73, type: 3}
+    - {fileID: 8761484550491967488, guid: 583dd6702c1fe40cc8e9c14e45049554, type: 3}
+    - {fileID: 8761484550491967488, guid: ccb2150d600ae4445aee1c7fc38a7d75, type: 3}
+    - {fileID: 8761484550491967488, guid: 6313c850cc4d54d9f961b5b4d6f6073a, type: 3}
+    - {fileID: 2599670119332685034, guid: 9d6a19be25d524d2089963d4d0f17c3d, type: 3}
+    - {fileID: 2599670119332685034, guid: 774637304d3ad41a8b5dd132baf754a5, type: 3}
+    spawnCells:
+    - {x: 0, y: -2, z: 0}
+    - {x: -4, y: -5, z: 0}
+  - wave: 11
+    waveEnd: 15
+    turnsPerSpawn: 2
+    animalPrefabs:
+    - {fileID: 5271801123675058674, guid: dcb825f83af1642769de10ef313f766f, type: 3}
+    - {fileID: 2599670119332685034, guid: 5184a845c33e74a73b5544f12e8a01f3, type: 3}
+    - {fileID: 8761484550491967488, guid: d08f384eceec74867b15b4508ed8fb73, type: 3}
+    - {fileID: 8761484550491967488, guid: 583dd6702c1fe40cc8e9c14e45049554, type: 3}
+    - {fileID: 8761484550491967488, guid: ccb2150d600ae4445aee1c7fc38a7d75, type: 3}
+    - {fileID: 8761484550491967488, guid: 6313c850cc4d54d9f961b5b4d6f6073a, type: 3}
+    - {fileID: 2599670119332685034, guid: 9d6a19be25d524d2089963d4d0f17c3d, type: 3}
+    - {fileID: 2599670119332685034, guid: 774637304d3ad41a8b5dd132baf754a5, type: 3}
+    spawnCells:
+    - {x: -4, y: -5, z: 0}
+    - {x: 4, y: -7, z: 0}
+  - wave: 15
+    waveEnd: 20
+    turnsPerSpawn: 2
+    animalPrefabs:
+    - {fileID: 5271801123675058674, guid: dcb825f83af1642769de10ef313f766f, type: 3}
+    - {fileID: 2599670119332685034, guid: 5184a845c33e74a73b5544f12e8a01f3, type: 3}
+    - {fileID: 8761484550491967488, guid: d08f384eceec74867b15b4508ed8fb73, type: 3}
+    - {fileID: 8761484550491967488, guid: 583dd6702c1fe40cc8e9c14e45049554, type: 3}
+    - {fileID: 8761484550491967488, guid: ccb2150d600ae4445aee1c7fc38a7d75, type: 3}
+    - {fileID: 8761484550491967488, guid: 6313c850cc4d54d9f961b5b4d6f6073a, type: 3}
+    - {fileID: 2599670119332685034, guid: 9d6a19be25d524d2089963d4d0f17c3d, type: 3}
+    - {fileID: 2599670119332685034, guid: 774637304d3ad41a8b5dd132baf754a5, type: 3}
+    spawnCells:
+    - {x: -4, y: -5, z: 0}
+    - {x: 4, y: -7, z: 0}
+    - {x: -4, y: -8, z: 0}
 --- !u!4 &625395892
 Transform:
   m_ObjectHideFlags: 0
