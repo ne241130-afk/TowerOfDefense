@@ -22,6 +22,12 @@ public class AnimalStats
     public string animalName = "Lion";
     public AnimalDiet diet = AnimalDiet.Carnivore;
 
+    //HP
+    [Header("捕獲耐久値")]
+    [Tooltip("捕獲されるまでに必要な捕獲判定の回数。カメ=1、ライオン=2、ゾウ=3など。")]
+    [Min(1)]
+    public int captureHitsRequired = 1;
+
     [Header("移動")]
     [Tooltip("1回の行動で移動できるマス数。チーターなら2など。")]
     public int squaresPerTurn = 1;

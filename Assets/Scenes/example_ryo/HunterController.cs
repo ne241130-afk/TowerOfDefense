@@ -134,6 +134,13 @@ public class HunterController : MonoBehaviour, ITurnActor
     /// </summary>
     private void Capture(AnimalController target)
     {
+        // HP捕獲判定。必要回数に達していなければ捕獲しない。
+    if (!target.RegisterCaptureHit()){
+        Debug.Log(
+            $"{target.Stats.animalName} はまだ捕獲されない！"
+        );
+        return;
+    }
         Debug.Log($"{data.hunterName} が {target.Stats.animalName} を捕獲した!");
         CaptureCounter.Instance?.AddCapture();
 

@@ -24,6 +24,24 @@ public class AnimalController : MonoBehaviour, ITurnActor
     // 「Nターンに1回しか動けない」動物用のカウンタ
     private int turnCounter = 0;
 
+    // <summary>
+    // HP これまでに受けた捕獲判定の回数。
+    // </summary>
+    private int captureHits = 0;
+    
+    // <summary>
+    // 捕獲判定を1回受ける。
+    // 必要回数に達した場合はtrueを返す。
+    // </summary>
+    public bool RegisterCaptureHit(){
+        captureHits++;
+        int required = Mathf.Max(1, stats.captureHitsRequired);
+        Debug.Log(
+            $"{stats.animalName}: 捕獲判定 {captureHits}/{required} 回目"
+        );
+        return captureHits >= required;
+    }
+
     private void Start()
     {
         if (FieldGridConfig.Instance == null || FieldGridConfig.Instance.grid == null)

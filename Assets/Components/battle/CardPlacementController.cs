@@ -472,7 +472,7 @@ public class CardPlacementController : MonoBehaviour
 
     /// <summary>
     /// 捕獲ネットランチャーの処理。
-    /// areaRadius の範囲内にいるすべての動物を即時捕獲し、
+    /// areaRadius の範囲内にいるすべての動物に捕獲判定を行い、必要回数に達した動物だけ捕獲する。
     /// placedVisualPrefab があればその位置に生成する(エフェクト用)。
     /// 永続フィールドエフェクトは登録しない。
     /// </summary>
@@ -481,20 +481,30 @@ public class CardPlacementController : MonoBehaviour
         var cells = EffectAreaUtility.GetSquareArea(center, selectedCard.areaRadius);
 
         int captured = 0;
+        //HP 捕獲耐久値
+        int hitCount = 0;
         foreach (var cell in cells)
         {
             if (AnimalOccupancyMap.Instance == null) break;
             if (!AnimalOccupancyMap.Instance.TryGetAnimalAt(cell, out var animal)) continue;
             if (animal == null) continue;
 
-            Debug.Log($"[NetLauncher] {animal.Stats.animalName} を捕獲した！");
-            CaptureCounter.Instance?.AddCapture();
-            WaveManager.Instance?.AddCapture();
-            Destroy(animal.gameObject);
-            captured++;
+            // 動物に捕獲判定を1回行う
+            hitCount++;
+            bool isCaptured = animal.RegisterCaptureHit();
+            if (isCaptured)
+            {
+                Debug.Log($"[NetLauncher] {animal.Stats.animalName} を捕獲した！");
+                CaptureCounter.Instance?.AddCapture();
+                WaveManager.Instance?.AddCapture();
+                Destroy(animal.gameObject);
+                captured++;
+            }else{
+                Debug.Log($"[NetLauncher] {animal.Stats.animalName} はまだ捕獲されない！");
+            }
         }
 
-        Debug.Log($"[NetLauncher] {captured} 体を捕獲。");
+        Debug.Log($"[NetLauncher]捕獲判定 {hitCount} 体、 今回の捕獲成功 {captured} 体。");
 
         // ビジュアルエフェクトを範囲中心に生成(設定されていれば)
         GameObject visualPrefab = selectedCard.placedVisualPrefab != null

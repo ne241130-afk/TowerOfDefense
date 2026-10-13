@@ -107,6 +107,7 @@ MonoBehaviour:
   stats:
     animalName: zou
     diet: 1
+    captureHitsRequired: 3
     squaresPerTurn: 1
     turnsPerMove: 2
     swampImmune: 0
