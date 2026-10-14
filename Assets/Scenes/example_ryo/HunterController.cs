@@ -5,9 +5,8 @@ using UnityEngine;
 /// ハンター1体を制御するコンポーネント。
 /// TurnManagerに登録され、毎ターン以下の順で行動する:
 /// 1. 時給制の場合は一定ターンごとに費用を消費。
-/// 2. actionRadiusが設定されている場合はそのエリア内の動物のみをターゲットにする。
-///    0以下ならエリア制限なしでdetectionRangeで検知する。
-/// 3. ターゲットに隣接していれば捕獲し、そうでなければエリア内でA*追跡移動する。
+/// 2. 攻撃間隔を満たしたターンのみ、攻撃範囲内の最近接1体を攻撃する。
+/// 3. 動物の捕獲HPが0以下(捕獲条件到達)になったら捕獲処理を実行する。
 /// </summary>
 public class HunterController : MonoBehaviour, ITurnActor
 {
@@ -21,11 +20,11 @@ public class HunterController : MonoBehaviour, ITurnActor
     /// <summary>ハンターが配置されたセル座標。actionRadiusの中心点。</summary>
     public Vector3Int HomeCell { get; private set; }
 
-    /// <summary>現在追跡中のターゲット動物。nullなら未設定。</summary>
-    private AnimalController currentTarget;
-
     /// <summary>時給制の支払いカウンタ。</summary>
     private int paymentTurnCounter = 0;
+
+    /// <summary>攻撃間隔用のターンカウンタ。</summary>
+    private int attackTurnCounter = 0;
 
     private void Start()
     {
@@ -47,29 +46,27 @@ public class HunterController : MonoBehaviour, ITurnActor
 
     /// <summary>
     /// TurnManagerから毎ターン呼ばれるメイン処理。
-    /// 支払い処理 → ターゲット選定 → 捕獲または追跡移動の順に実行する。
+    /// 支払い処理 → 攻撃間隔判定 → ターゲット選定 → 攻撃の順で実行する。
     /// </summary>
     public void OnTurnTick()
     {
         HandlePayment();
+        if (!CanAttackThisTurn()) return;
 
-        // ターゲットが破棄されたまたはエリア外に移動したらリセット
-        if (currentTarget == null || !IsInActionArea(currentTarget.CurrentCell))
-        {
-            currentTarget = null;
-            currentTarget = FindNearestAnimalInRange();
-        }
+        var target = FindNearestAnimalInRange();
+        if (target == null) return; // 範囲内に動物なし → 待機
 
-        if (currentTarget == null) return; // ターゲット不在 → 待機
+        Attack(target);
+    }
 
-        if (ChebyshevDistance(CurrentCell, currentTarget.CurrentCell) <= 1)
-        {
-            Capture(currentTarget);
-        }
-        else
-        {
-            ChaseTarget();
-        }
+    private bool CanAttackThisTurn()
+    {
+        int interval = Mathf.Max(1, data.attackIntervalTurns);
+        attackTurnCounter++;
+        if (attackTurnCounter < interval) return false;
+
+        attackTurnCounter = 0;
+        return true;
     }
 
     /// <summary>
@@ -92,8 +89,8 @@ public class HunterController : MonoBehaviour, ITurnActor
 
     /// <summary>
     /// ターゲット候補を探す。
-    /// actionRadiusが設定されている場合はhomeCellからのエリア内の動物のみを対象とする。
-    /// 0以下ならエリア制限なしでdetectionRange内の最近働を返す。
+    /// actionRadiusが設定されている場合はhomeCellからのエリア内のみを対象とする。
+    /// 0以下ならdetectionRange内を対象とする。
     /// </summary>
     private AnimalController FindNearestAnimalInRange()
     {
@@ -130,17 +127,14 @@ public class HunterController : MonoBehaviour, ITurnActor
     }
 
     /// <summary>
-    /// ターゲットをCaptureCounterに加算し、GameObjectを破棄してターゲットをリセットする。
+    /// 1体だけ攻撃し、捕獲条件到達時のみ捕獲処理を実行する。
     /// </summary>
-    private void Capture(AnimalController target)
+    private void Attack(AnimalController target)
     {
-        // HP捕獲判定。必要回数に達していなければ捕獲しない。
-    if (!target.RegisterCaptureHit()){
-        Debug.Log(
-            $"{target.Stats.animalName} はまだ捕獲されない！"
-        );
-        return;
-    }
+        int damage = Mathf.Max(1, data.attackPower);
+        bool captured = target.ApplyCaptureDamage(damage);
+        if (!captured) return;
+
         Debug.Log($"{data.hunterName} が {target.Stats.animalName} を捕獲した!");
         CaptureCounter.Instance?.AddCapture();
 
@@ -151,34 +145,6 @@ public class HunterController : MonoBehaviour, ITurnActor
         }
 
         Destroy(target.gameObject);
-        currentTarget = null;
-    }
-
-    /// <summary>
-    /// A*でターゲットへの経路を求め、squaresPerTurn分だけ1マスずつ移動する。
-    /// エリア外には踏み出さないようisWalkableで制約する。
-    /// </summary>
-    private void ChaseTarget()
-    {
-        var goals = new List<Vector3Int> { currentTarget.CurrentCell };
-
-        List<Vector3Int> path = AStarPathfinder.FindPath(
-            CurrentCell,
-            goals,
-            cell => FieldGridConfig.Instance.IsWalkable(cell) && IsInActionArea(cell),
-            _ => false,
-            _ => 1f
-        );
-
-        if (path == null || path.Count < 2) return; // 経路なし → 待機
-
-        int steps = Mathf.Min(data.squaresPerTurn, path.Count - 1);
-        for (int i = 0; i < steps; i++)
-        {
-            Vector3Int nextCell = path[i + 1];
-            CurrentCell = nextCell;
-            transform.position = FieldGridConfig.Instance.grid.GetCellCenterWorld(nextCell);
-        }
     }
 
     /// <summary>

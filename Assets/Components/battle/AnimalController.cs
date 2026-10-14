@@ -27,21 +27,36 @@ public class AnimalController : MonoBehaviour, ITurnActor
     // 「Nターンに1回しか動けない」動物用のカウンタ
     private int turnCounter = 0;
 
+    // 威嚇成功時、次のOnTurnTickで1回だけ移動をスキップする。
+    private bool skipMoveThisTurn = false;
+
     // <summary>
     // HP これまでに受けた捕獲判定の回数。
     // </summary>
     private int captureHits = 0;
     
-    // <summary>
-    // 捕獲判定を1回受ける。
-    // 必要回数に達した場合はtrueを返す。
-    // </summary>
-    public bool RegisterCaptureHit(){
-        captureHits++;
+    /// <summary>
+    /// 捕獲判定を1回受ける（既存API）。
+    /// </summary>
+    public bool RegisterCaptureHit()
+    {
+        return ApplyCaptureDamage(1);
+    }
+
+    /// <summary>
+    /// 捕獲HPに対してダメージを与える。
+    /// 戻り値: 捕獲条件（HP 0以下）に到達したか。
+    /// </summary>
+    public bool ApplyCaptureDamage(int damage)
+    {
+        int actualDamage = Mathf.Max(0, damage);
+        if (actualDamage <= 0) return false;
+
+        captureHits += actualDamage;
         int required = Mathf.Max(1, stats.captureHitsRequired);
-        Debug.Log(
-            $"{stats.animalName}: 捕獲判定 {captureHits}/{required} 回目"
-        );
+        int remaining = Mathf.Max(0, required - captureHits);
+
+        Debug.Log($"{stats.animalName}: ダメージ {actualDamage} / 残HP {remaining}");
         return captureHits >= required;
     }
 
@@ -91,8 +106,23 @@ public class AnimalController : MonoBehaviour, ITurnActor
         }
     }
 
+    /// <summary>
+    /// 威嚇直後の1ターンだけ移動を禁止する。
+    /// </summary>
+    public void ApplyIntimidationForNextTurn()
+    {
+        skipMoveThisTurn = true;
+    }
+    }
+
     public void OnTurnTick()
     {
+        if (skipMoveThisTurn)
+        {
+            skipMoveThisTurn = false;
+            return;
+        }
+
         if (moveDelayTurns > 0)
         {
             moveDelayTurns--;
@@ -106,19 +136,163 @@ public class AnimalController : MonoBehaviour, ITurnActor
         Move();
     }
 
+    public bool TryGetPlannedPath(out List<Vector3Int> path)
+    {
+        path = null;
+
+        if (!TryBuildGoals(out var attractiveCells, out var goals)) return false;
+        if (attractiveCells.Contains(CurrentCell)) return false;
+
+        path = FindPathFrom(CurrentCell, goals);
+        return path != null && path.Count >= 2;
+    }
+
+    public bool TryGetNextTurnDestination(out Vector3Int destination)
+    {
+        destination = default;
+
+        if (moveDelayTurns > 0) return false;
+        if (!WillAttemptMoveOnNextTurn()) return false;
+        if (!TryBuildGoals(out var attractiveCells, out var goals)) return false;
+        if (attractiveCells.Contains(CurrentCell)) return false;
+
+        Vector3Int simulatedCell = CurrentCell;
+        bool moved = false;
+        int maxSteps = Mathf.Max(0, stats.squaresPerTurn);
+
+        for (int i = 0; i < maxSteps; i++)
+        {
+            if (IsAtGoal(simulatedCell)) break;
+
+            var path = FindPathFrom(simulatedCell, goals);
+            if (path == null || path.Count < 2) break;
+
+            simulatedCell = path[1];
+            moved = true;
+
+            if (attractiveCells.Contains(simulatedCell)) break;
+        }
+
+        if (!moved) return false;
+
+        destination = simulatedCell;
+        return true;
+    }
+
+    /// <summary>
+    /// 現在の進行方向と逆向きの1マスを返す。
+    /// 進行方向は「現在地からゴールへ向かう経路の1歩目」で判定する。
+    /// </summary>
+    public bool TryGetRetreatCell(out Vector3Int retreatCell)
+    {
+        retreatCell = default;
+
+        if (FieldGridConfig.Instance == null ||
+            AnimalOccupancyMap.Instance == null)
+        {
+            return false;
+        }
+
+        if (!TryBuildGoals(out _, out var goals)) return false;
+
+        // 威嚇用の進行方向判定では、他動物の一時的な詰まりを無視して
+        // 「本来の進行方向」を求める。
+        var path = AStarPathfinder.FindPath(
+            CurrentCell,
+            goals,
+            FieldGridConfig.Instance.IsWalkable,
+            cell => false,
+            CostAt);
+
+        Vector3Int forward;
+        if (path != null && path.Count >= 2)
+        {
+            forward = path[1] - CurrentCell;
+        }
+        else if (!TryGetGoalDirectionFallback(goals, out forward))
+        {
+            return false;
+        }
+
+        if (forward == Vector3Int.zero) return false;
+
+        retreatCell = CurrentCell - forward;
+
+        if (!FieldGridConfig.Instance.IsWalkable(retreatCell)) return false;
+        if (AnimalOccupancyMap.Instance.IsOccupied(retreatCell)) return false;
+
+        return true;
+    }
+
+    private bool TryGetGoalDirectionFallback(IReadOnlyList<Vector3Int> goals, out Vector3Int direction)
+    {
+        direction = Vector3Int.zero;
+        if (goals == null || goals.Count == 0) return false;
+
+        int bestDistance = int.MaxValue;
+        Vector3Int nearestGoal = goals[0];
+        foreach (var goal in goals)
+        {
+            int d = Mathf.Abs(goal.x - CurrentCell.x) + Mathf.Abs(goal.y - CurrentCell.y);
+            if (d < bestDistance)
+            {
+                bestDistance = d;
+                nearestGoal = goal;
+            }
+        }
+
+        int dx = nearestGoal.x - CurrentCell.x;
+        int dy = nearestGoal.y - CurrentCell.y;
+
+        if (Mathf.Abs(dx) >= Mathf.Abs(dy) && dx != 0)
+        {
+            direction = new Vector3Int(dx > 0 ? 1 : -1, 0, 0);
+            return true;
+        }
+
+        if (dy != 0)
+        {
+            direction = new Vector3Int(0, dy > 0 ? 1 : -1, 0);
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// 動物をゴールから遠ざかる方向に1マス後退させる。
+    /// </summary>
+    public bool TryRetreatOneCell()
+    {
+        if (!TryGetRetreatCell(out var retreatCell)) return false;
+        return TryMoveToCell(retreatCell);
+    }
+
+    /// <summary>
+    /// 指定セルへ即時移動する。占有情報と見た目の位置を既存処理で更新する。
+    /// </summary>
+    public bool TryMoveToCell(Vector3Int targetCell)
+    {
+        if (FieldGridConfig.Instance == null ||
+            AnimalOccupancyMap.Instance == null)
+        {
+            return false;
+        }
+
+        if (!FieldGridConfig.Instance.IsWalkable(targetCell)) return false;
+        if (AnimalOccupancyMap.Instance.IsOccupiedByOther(targetCell, this)) return false;
+        if (targetCell == CurrentCell) return false;
+
+        EnterCell(targetCell);
+        return true;
+    }
+
     private void Move()
     {
-        // 誘引マスを取得(肉食動物は肉のマスなど)
-        List<Vector3Int> attractiveCells = FieldEffectMap.Instance != null
-            ? FieldEffectMap.Instance.GetAttractiveCells(this)
-            : new List<Vector3Int>();
+        if (!TryBuildGoals(out var attractiveCells, out var goals)) return;
 
         // 現在いるマスが誘引マスなら移動せず待機する(食べている最中)
         if (attractiveCells.Contains(CurrentCell)) return;
-
-        // 誘引マス(優先) + ゴールマスを合わせた目標リストでA*を実行
-        var goals = new List<Vector3Int>(attractiveCells);
-        goals.AddRange(FieldGridConfig.Instance.goalCells);
 
         for (int i = 0; i < stats.squaresPerTurn; i++)
         {
@@ -154,9 +328,45 @@ public class AnimalController : MonoBehaviour, ITurnActor
         }
     }
 
+    private bool TryBuildGoals(out List<Vector3Int> attractiveCells, out List<Vector3Int> goals)
+    {
+        attractiveCells = FieldEffectMap.Instance != null
+            ? FieldEffectMap.Instance.GetAttractiveCells(this)
+            : new List<Vector3Int>();
+
+        goals = new List<Vector3Int>(attractiveCells);
+
+        if (FieldGridConfig.Instance == null)
+        {
+            return goals.Count > 0;
+        }
+
+        goals.AddRange(FieldGridConfig.Instance.goalCells);
+        return goals.Count > 0;
+    }
+
+    private List<Vector3Int> FindPathFrom(Vector3Int startCell, IReadOnlyList<Vector3Int> goals)
+    {
+        if (FieldGridConfig.Instance == null) return null;
+        if (AnimalOccupancyMap.Instance == null) return null;
+
+        return AStarPathfinder.FindPath(
+            startCell,
+            goals,
+            FieldGridConfig.Instance.IsWalkable,
+            cell => AnimalOccupancyMap.Instance.IsOccupiedByOther(cell, this),
+            CostAt);
+    }
+
+    private bool WillAttemptMoveOnNextTurn()
+    {
+        int turnsPerMove = Mathf.Max(1, stats.turnsPerMove);
+        return turnCounter + 1 >= turnsPerMove;
+    }
+
     private bool IsAtGoal(Vector3Int cell)
     {
-        return FieldGridConfig.Instance.goalCells.Contains(cell);
+        return FieldGridConfig.Instance != null && FieldGridConfig.Instance.goalCells.Contains(cell);
     }
 
     private float CostAt(Vector3Int cell)

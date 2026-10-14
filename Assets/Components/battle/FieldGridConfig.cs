@@ -20,6 +20,10 @@ public class FieldGridConfig : MonoBehaviour
     [Tooltip("最上段中央の2マスなど、動物が目指すセル座標のリスト")]
     public List<Vector3Int> goalCells = new List<Vector3Int>();
 
+    [Header("可視化")]
+    [Tooltip("未配置でも動物の経路可視化を自動生成する")]
+    public bool autoCreateAnimalPathVisualization = true;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -28,6 +32,11 @@ public class FieldGridConfig : MonoBehaviour
             return;
         }
         Instance = this;
+
+        if (autoCreateAnimalPathVisualization)
+        {
+            AnimalPathVisualization.EnsureExists(transform);
+        }
     }
 
     public bool IsWalkable(Vector3Int cell)

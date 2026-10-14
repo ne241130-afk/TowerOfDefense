@@ -40,4 +40,13 @@ public class HunterData
 
     [Tooltip("ハンターが行動できるエリアの半径(homeCellからのChebyshev距離)。0以下ならエリア制限なし")]
     public int actionRadius = 0;
+
+    [Header("攻撃性能")]
+    [Tooltip("1回の攻撃で与えるダメージ量。動物の捕獲HPに対して減算される")]
+    [Min(1)]
+    public int attackPower = 1;
+
+    [Tooltip("何ターンごとに1回攻撃するか。1なら毎ターン攻撃")]
+    [Min(1)]
+    public int attackIntervalTurns = 1;
 }
