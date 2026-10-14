@@ -138,6 +138,11 @@ public class HunterController : MonoBehaviour, ITurnActor
         Debug.Log($"{data.hunterName} が {target.Stats.animalName} を捕獲した!");
         CaptureCounter.Instance?.AddCapture();
 
+        // 捕獲成功時に所持金を増やす
+        if (EconomyManager.Instance != null)
+        {EconomyManager.Instance.AddMoney(50);
+        Debug.Log($"捕獲報酬50 現在の所持金: {EconomyManager.Instance.CurrentMoney}");}
+
         // WaveManagerにも捕獲を通知
         if (WaveManager.Instance != null)
         {
