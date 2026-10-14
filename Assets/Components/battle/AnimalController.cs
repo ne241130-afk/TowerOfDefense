@@ -113,7 +113,6 @@ public class AnimalController : MonoBehaviour, ITurnActor
     {
         skipMoveThisTurn = true;
     }
-    }
 
     public void OnTurnTick()
     {
