@@ -1,3 +1,4 @@
+
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -24,6 +25,13 @@ public class AnimalStatusEffectUI : MonoBehaviour
         {
             effectImage.enabled = false;
         }
+        else
+        {
+            Debug.LogWarning(
+                "AnimalStatusEffectUI: effectImage が設定されていません。",
+                this
+            );
+        }
     }
 
     public void ShowSweat()
@@ -40,12 +48,13 @@ public class AnimalStatusEffectUI : MonoBehaviour
     {
         if (frames == null || frames.Length == 0)
         {
+            Debug.LogWarning("AnimalStatusEffectUI: エフェクト画像が設定されていません。", this);
             return;
         }
 
         if (effectImage == null)
         {
-            Debug.LogWarning("AnimalStatusEffectUI: effectImage が設定されていません。");
+            Debug.LogWarning("AnimalStatusEffectUI: effectImage が設定されていません。", this);
             return;
         }
 
@@ -63,8 +72,12 @@ public class AnimalStatusEffectUI : MonoBehaviour
 
         foreach (Sprite frame in frames)
         {
-            effectImage.sprite = frame;
+            if (frame == null)
+            {
+                continue;
+            }
 
+            effectImage.sprite = frame;
             yield return new WaitForSeconds(frameDuration);
         }
 

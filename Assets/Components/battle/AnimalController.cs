@@ -21,6 +21,9 @@ public class AnimalController : MonoBehaviour, ITurnActor
     // 足止め残りターン数(沼地・鎖などから加算される)
     private int moveDelayTurns = 0;
 
+    // エフェクト用
+    private AnimalStatusEffectUI statusEffectUI;
+
     // 「Nターンに1回しか動けない」動物用のカウンタ
     private int turnCounter = 0;
 
@@ -44,6 +47,8 @@ public class AnimalController : MonoBehaviour, ITurnActor
 
     private void Start()
     {
+        statusEffectUI = GetComponentInChildren<AnimalStatusEffectUI>();
+
         if (FieldGridConfig.Instance == null || FieldGridConfig.Instance.grid == null)
         {
             Debug.LogError($"{name}: FieldGridConfigが見つかりません。シーンに配置しGridを設定してください。", this);
@@ -68,6 +73,22 @@ public class AnimalController : MonoBehaviour, ITurnActor
     {
         if (turns <= 0) return;
         moveDelayTurns += turns;
+    }
+
+    public void ShowSweatEffect()
+    {
+        if (statusEffectUI != null)
+        {
+            statusEffectUI.ShowSweat();
+        }
+    }
+
+    public void ShowHeartEffect()
+    {
+        if (statusEffectUI != null)
+        {
+            statusEffectUI.ShowHeart();
+        }
     }
 
     public void OnTurnTick()
@@ -120,7 +141,11 @@ public class AnimalController : MonoBehaviour, ITurnActor
             EnterCell(path[1]);
 
             // 誘引マスに到達したらそのマスで移動を止める
-            if (attractiveCells.Contains(CurrentCell)) return;
+            if (attractiveCells.Contains(CurrentCell))
+            {
+                ShowHeartEffect();
+                return;
+            }
         }
 
         if (IsAtGoal(CurrentCell))

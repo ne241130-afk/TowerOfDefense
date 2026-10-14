@@ -14,8 +14,15 @@ public class SwampFieldEffect : IFieldEffect
     {
         if (animal.Stats.swampImmune) return true;
 
-        int extraDelay = Mathf.RoundToInt(baseExtraDelay * animal.Stats.restrictionEffectMultiplier);
+        int extraDelay = Mathf.RoundToInt(
+            baseExtraDelay * animal.Stats.restrictionEffectMultiplier
+        );
+
         animal.AddMoveDelay(extraDelay);
+
+        // 汗エフェクトを表示
+        animal.ShowSweatEffect();
+
         return true;
     }
 
