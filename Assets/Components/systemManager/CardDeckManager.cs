@@ -31,6 +31,12 @@ public class CardDeckManager : MonoBehaviour
     [Header("設定")]
     public int handSize = 4;
 
+    [Header("リロード設定")]
+    public int reloadCost = 50;
+    
+    // 最後にリロードしたターンの記憶
+    private int lastReloadTurn = -1;
+
     private void Start()
     {
         DrawInitialHand();
@@ -129,6 +135,82 @@ public class CardDeckManager : MonoBehaviour
         // UIを更新
         UpdateHandUI();
     }
+
+    /// <summary>
+    /// 手札をすべてリロードする。
+    /// 1ターンにつき1回、所持金50円を消費する。
+    /// </summary>
+    public void ReloadHand()
+    {
+        // ターン管理の確認
+        if (TurnManager.Instance == null)
+        {
+            Debug.LogWarning("TurnManagerが見つからないため、リロードできません。");
+            return;
+        }
+        
+        int currentTurn = TurnManager.Instance.CurrentTurn;
+        
+        // 同じターンにすでにリロードしている場合
+        if (lastReloadTurn == currentTurn)
+        {
+            Debug.Log("このターンはすでにリロードしています。");
+            return;
+        }
+        
+        // 所持金の確認
+        if (EconomyManager.Instance == null)
+        {
+            Debug.LogWarning("EconomyManagerが見つからないため、リロードできません。");
+            return;
+        }
+        
+        if (EconomyManager.Instance.CurrentMoney < reloadCost)
+        {
+            Debug.Log("所持金が足りないため、リロードできません。");
+            return;
+        }
+        
+        // 山札が空の場合は引き直せない
+        if (deck.Count == 0)
+        {
+            Debug.Log("山札が空のため、リロードできません。");
+            return;
+        }
+        
+        // 支払いを実行
+        if (!EconomyManager.Instance.TrySpend(reloadCost))
+        {
+            Debug.Log("支払いに失敗したため、リロードできません。");
+            return;
+        }
+        
+        // 現在の手札を山札に戻す
+        foreach (CardData card in hand)
+        {
+            if (card != null)
+            {
+                deck.Add(card);
+            }
+        }
+        
+        hand.Clear();
+        
+        // 手札を引き直す
+        for (int i = 0; i < handSize && deck.Count > 0; i++)
+        {
+            DrawRandomCard();
+        }
+        
+        // リロードしたターンを記録
+        lastReloadTurn = currentTurn;
+        
+        // UIを更新
+        UpdateHandUI();
+        
+        Debug.Log($"手札をリロードしました。費用: {reloadCost}円");
+    }
+
 
     /// <summary>
     /// 手札をUIに表示する。
