@@ -138,7 +138,7 @@ public class CardDeckManager : MonoBehaviour
 
     /// <summary>
     /// 手札をすべてリロードする。
-    /// 1ターンにつき1回、所持金50円を消費する。
+    /// 1ターンにつき1回、無料で行える
     /// </summary>
     public void ReloadHand()
     {
@@ -158,30 +158,10 @@ public class CardDeckManager : MonoBehaviour
             return;
         }
         
-        // 所持金の確認
-        if (EconomyManager.Instance == null)
-        {
-            Debug.LogWarning("EconomyManagerが見つからないため、リロードできません。");
-            return;
-        }
-        
-        if (EconomyManager.Instance.CurrentMoney < reloadCost)
-        {
-            Debug.Log("所持金が足りないため、リロードできません。");
-            return;
-        }
-        
         // 山札が空の場合は引き直せない
         if (deck.Count == 0)
         {
             Debug.Log("山札が空のため、リロードできません。");
-            return;
-        }
-        
-        // 支払いを実行
-        if (!EconomyManager.Instance.TrySpend(reloadCost))
-        {
-            Debug.Log("支払いに失敗したため、リロードできません。");
             return;
         }
         
@@ -208,7 +188,7 @@ public class CardDeckManager : MonoBehaviour
         // UIを更新
         UpdateHandUI();
         
-        Debug.Log($"手札をリロードしました。費用: {reloadCost}円");
+        Debug.Log($"手札をリロードしました。");
     }
 
 
