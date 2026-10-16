@@ -37,9 +37,11 @@ public class FieldGridConfig : MonoBehaviour
         {
             AnimalPathVisualization.EnsureExists(transform);
         }
+
+        WallBlockMap.EnsureExists(transform);
     }
 
-    public bool IsWalkable(Vector3Int cell)
+    public bool IsBaseWalkable(Vector3Int cell)
     {
         if (walkableTilemap == null || grid == null) return false;
         // grid.WorldToCell() はGrid空間の座標を返すが、
@@ -48,5 +50,12 @@ public class FieldGridConfig : MonoBehaviour
         // そのまま渡すと座標系がずれるため、一度ワールド座標に戻してからTilemap空間へ変換する。
         Vector3 worldPos = grid.GetCellCenterWorld(cell);
         return walkableTilemap.HasTile(walkableTilemap.WorldToCell(worldPos));
+    }
+
+    public bool IsWalkable(Vector3Int cell)
+    {
+        if (!IsBaseWalkable(cell)) return false;
+        if (WallBlockMap.Instance != null && WallBlockMap.Instance.IsWall(cell)) return false;
+        return true;
     }
 }

@@ -57,7 +57,7 @@ public class WallBlockMap : MonoBehaviour
             return false;
         }
 
-        if (!FieldGridConfig.Instance.IsBaseWalkable(wallCell))
+        if (!IsBaseWalkable(wallCell))
         {
             reason = "壁: そのマスには配置できません。";
             return false;
@@ -96,7 +96,7 @@ public class WallBlockMap : MonoBehaviour
             // 置こうとしている壁が開始地点そのものなら到達不能。
             if (start == candidateWall) return false;
 
-            if (!FieldGridConfig.Instance.IsBaseWalkable(start)) continue;
+            if (!IsBaseWalkable(start)) continue;
 
             List<Vector3Int> path = AStarPathfinder.FindPath(
                 start,
@@ -117,10 +117,24 @@ public class WallBlockMap : MonoBehaviour
     private bool IsWalkableForValidation(Vector3Int cell, Vector3Int candidateWall)
     {
         if (FieldGridConfig.Instance == null) return false;
-        if (!FieldGridConfig.Instance.IsBaseWalkable(cell)) return false;
+        if (!IsBaseWalkable(cell)) return false;
         if (cell == candidateWall) return false;
         if (IsWall(cell)) return false;
         return true;
+    }
+
+    private bool IsBaseWalkable(Vector3Int cell)
+    {
+        if (FieldGridConfig.Instance == null ||
+            FieldGridConfig.Instance.walkableTilemap == null ||
+            FieldGridConfig.Instance.grid == null)
+        {
+            return false;
+        }
+
+        Vector3 worldPos = FieldGridConfig.Instance.grid.GetCellCenterWorld(cell);
+        return FieldGridConfig.Instance.walkableTilemap.HasTile(
+            FieldGridConfig.Instance.walkableTilemap.WorldToCell(worldPos));
     }
 
     private HashSet<Vector3Int> CollectPathValidationStarts()

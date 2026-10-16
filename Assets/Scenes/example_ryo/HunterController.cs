@@ -26,6 +26,9 @@ public class HunterController : MonoBehaviour, ITurnActor
     /// <summary>攻撃間隔用のターンカウンタ。</summary>
     private int attackTurnCounter = 0;
 
+    /// <summary>時限ハンター用の寿命ターン。0以下なら無制限。</summary>
+    private int remainingLifetimeTurns = 0;
+
     private void Start()
     {
         if (FieldGridConfig.Instance == null || FieldGridConfig.Instance.grid == null)
@@ -50,6 +53,16 @@ public class HunterController : MonoBehaviour, ITurnActor
     /// </summary>
     public void OnTurnTick()
     {
+        if (remainingLifetimeTurns > 0)
+        {
+            remainingLifetimeTurns--;
+            if (remainingLifetimeTurns <= 0)
+            {
+                Destroy(gameObject);
+                return;
+            }
+        }
+
         HandlePayment();
         if (!CanAttackThisTurn()) return;
 
@@ -57,6 +70,14 @@ public class HunterController : MonoBehaviour, ITurnActor
         if (target == null) return; // 範囲内に動物なし → 待機
 
         Attack(target);
+    }
+
+    /// <summary>
+    /// このハンターを時限モードにし、指定ターン経過後に消滅させる。
+    /// </summary>
+    public void ConfigureLifetime(int lifetimeTurns)
+    {
+        remainingLifetimeTurns = Mathf.Max(0, lifetimeTurns);
     }
 
     private bool CanAttackThisTurn()
@@ -137,11 +158,6 @@ public class HunterController : MonoBehaviour, ITurnActor
 
         Debug.Log($"{data.hunterName} が {target.Stats.animalName} を捕獲した!");
         CaptureCounter.Instance?.AddCapture();
-
-        // 捕獲成功時に所持金を増やす
-        if (EconomyManager.Instance != null)
-        {EconomyManager.Instance.AddMoney(50);
-        Debug.Log($"捕獲報酬50 現在の所持金: {EconomyManager.Instance.CurrentMoney}");}
 
         // WaveManagerにも捕獲を通知
         if (WaveManager.Instance != null)

@@ -20195,7 +20195,13 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 9c7aca9523c064b38aeeae384b2295bf, type: 2}
   - {fileID: 11400000, guid: 8504b4edf88cf468f843ab2cc146b665, type: 2}
   - {fileID: 11400000, guid: 8504b4edf88cf468f843ab2cc146b665, type: 2}
-  - {fileID: 11400000, guid: 8504b4edf88cf468f843ab2cc146b665, type: 2}
+  - {fileID: 11400000, guid: b9f9f6d0be1364bf187b586f8b89b1c3, type: 2}
+  - {fileID: 11400000, guid: b9f9f6d0be1364bf187b586f8b89b1c3, type: 2}
+  - {fileID: 11400000, guid: b9f9f6d0be1364bf187b586f8b89b1c3, type: 2}
+  - {fileID: 11400000, guid: fda066936d77e4e5eacd9a45647c3427, type: 2}
+  - {fileID: 11400000, guid: fda066936d77e4e5eacd9a45647c3427, type: 2}
+  - {fileID: 11400000, guid: fda066936d77e4e5eacd9a45647c3427, type: 2}
+  - {fileID: 11400000, guid: fda066936d77e4e5eacd9a45647c3427, type: 2}
   hand: []
   cardSlots:
   - {fileID: 692885761}

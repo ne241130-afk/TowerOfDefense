@@ -9,9 +9,11 @@ public enum CardEffectType
     Swamp,          // 沼地
     ChainLock,      // 鎖(鍵)
     SummonHunter,   // ハンター召喚
+    SummonTimedHunter, // 時限ハンター召喚(一定ターン後に消滅)
     Meat,           // 肉(肉食動物を誘引)
     Fluit,          // 果物(草食動物を誘引)
     NetLauncher,    // 捕獲ネットランチャー(範囲内の動物を即時捕獲)
+    Wall,           // 壁(動物が通過できない障害物)
     ManekinNeko,    // 招き猫(使用時に江增加 / wave終了時に所持金×1.5)
 }
 
@@ -44,6 +46,11 @@ public class CardData : ScriptableObject
     [Header("ハンター召喚(effectType == SummonHunter のときのみ使用)")]
     [Tooltip("召喚するハンターのプレハブ。HunterControllerコンポーネントがアタッチされている必要がある")]
     public GameObject hunterPrefab;
+
+    [Header("時限ハンター召喚(effectType == SummonTimedHunter のときのみ使用)")]
+    [Tooltip("このターン数が経過したら時限ハンターを消滅させる。1以上を指定する")]
+    [Min(1)]
+    public int timedHunterLifetimeTurns = 3;
 
     [Header("招き猫(effectType == ManekinNeko のときのみ使用)")]
     [Tooltip("使用時に増加する所持金。")]

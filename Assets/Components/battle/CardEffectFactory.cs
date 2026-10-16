@@ -15,12 +15,18 @@ public static class CardEffectFactory
             case CardEffectType.SummonHunter:
                 // ハンター召喚はIFieldEffectではなくCardPlacementController側で処理するため null を返す
                 return null;
+            case CardEffectType.SummonTimedHunter:
+                // 時限ハンター召喚はCardPlacementController側で処理する
+                return null;
             case CardEffectType.Meat:
                 return new MeatFieldEffect();
             case CardEffectType.Fluit:
                 return new FluitFieldEffect();
             case CardEffectType.NetLauncher:
                 // 即時捕獲のため永続エフェクトなし。CardPlacementController 側で処理する
+                return null;
+            case CardEffectType.Wall:
+                // 壁配置は WallBlockMap を使うため CardPlacementController 側で処理する
                 return null;
             case CardEffectType.ManekinNeko:
                 // 即時賞金効果のため永続エフェクトなし。CardPlacementController 側で処理する

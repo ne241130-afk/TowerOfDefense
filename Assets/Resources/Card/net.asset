@@ -15,9 +15,10 @@ MonoBehaviour:
   cardName: "\u6355\u7372\u30CD\u30C3\u30C8\u30E9\u30F3\u30C1\u30E3\u30FC"
   description: "\u4E00\u5B9A\u7BC4\u56F2\u306E\u52D5\u7269\u3092\u6355\u7372\u3059\u308B\u3002"
   icon: {fileID: 294434920142312338, guid: c06d06e8d14cc4eb29be37c88839ed00, type: 3}
-  effectType: 5
+  effectType: 6
   areaRadius: 2
   placedVisualPrefab: {fileID: 0}
   cost: 50
   hunterPrefab: {fileID: 0}
+  timedHunterLifetimeTurns: 3
   bonusAmount: 100

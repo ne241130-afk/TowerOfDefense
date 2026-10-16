@@ -205,6 +205,8 @@ public class CardPlacementController : MonoBehaviour
 
     private void TryPlaceAt(Vector3Int center)
     {
+        WallBlockMap.EnsureExists(FieldGridConfig.Instance != null ? FieldGridConfig.Instance.transform : null);
+
         // 招き猫はフィールド設置不要。どこかがクリックされた時点で即時発動する
         if (selectedCard.effectType == CardEffectType.ManekinNeko)
         {
@@ -218,6 +220,15 @@ public class CardPlacementController : MonoBehaviour
             }
             UseManekinNeko();
             return;
+        }
+
+        if (selectedCard.effectType == CardEffectType.Wall)
+        {
+            if (!CanPlaceWallAt(center, out string reason))
+            {
+                if (!string.IsNullOrEmpty(reason)) Debug.Log(reason);
+                return;
+            }
         }
 
         if (!FieldGridConfig.Instance.IsWalkable(center)) return;
@@ -246,7 +257,13 @@ public class CardPlacementController : MonoBehaviour
         // ハンター召喚カードはIFieldEffectを使わず、プレハブを直接1体配置する
         if (selectedCard.effectType == CardEffectType.SummonHunter)
         {
-            PlaceHunter(center);
+            PlaceHunter(center, timed: false);
+            return;
+        }
+
+        if (selectedCard.effectType == CardEffectType.SummonTimedHunter)
+        {
+            PlaceHunter(center, timed: true);
             return;
         }
 
@@ -267,6 +284,12 @@ public class CardPlacementController : MonoBehaviour
         if (selectedCard.effectType == CardEffectType.NetLauncher)
         {
             PlaceNetLauncher(center);
+            return;
+        }
+
+        if (selectedCard.effectType == CardEffectType.Wall)
+        {
+            PlaceWall(center);
             return;
         }
 
@@ -367,11 +390,24 @@ public class CardPlacementController : MonoBehaviour
         }
     }
 
+    private bool CanPlaceWallAt(Vector3Int center, out string reason)
+    {
+        reason = null;
+
+        if (WallBlockMap.Instance == null)
+        {
+            reason = "壁: WallBlockMap が見つかりません。";
+            return false;
+        }
+
+        return WallBlockMap.Instance.CanPlaceWall(center, out reason);
+    }
+
     /// <summary>
     /// ハンター召喚カードの配置処理。指定セルにhunterPrefabを1体インスタンス化する。
     /// placedVisualPrefab が設定されていればそのセルに背景スプライトを表示する。
     /// </summary>
-    private void PlaceHunter(Vector3Int cell)
+    private void PlaceHunter(Vector3Int cell, bool timed)
     {
         if (selectedCard.hunterPrefab == null)
         {
@@ -387,6 +423,11 @@ public class CardPlacementController : MonoBehaviour
         if (hunter != null)
         {
             hunter.data.actionRadius = selectedCard.areaRadius;
+
+            if (timed)
+            {
+                hunter.ConfigureLifetime(selectedCard.timedHunterLifetimeTurns);
+            }
         }
 
         // placedVisualPrefab（未設定時はdefaultPlacedEffectVisualPrefab）で配置先のセルに背景を表示
@@ -464,6 +505,34 @@ public class CardPlacementController : MonoBehaviour
             ? selectedCard.placedVisualPrefab
             : defaultPlacedEffectVisualPrefab;
         Instantiate(visualPrefab, worldPos, Quaternion.identity);
+
+        selectedSlot.ConsumeCard();
+        ClearSelection();
+        TurnManager.Instance?.AdvanceTurn();
+    }
+
+    private void PlaceWall(Vector3Int cell)
+    {
+        if (WallBlockMap.Instance == null)
+        {
+            Debug.LogWarning("壁: WallBlockMap が見つかりません。", this);
+            return;
+        }
+
+        if (!WallBlockMap.Instance.TryAddWall(cell))
+        {
+            Debug.Log("壁: そのマスには配置できません。");
+            return;
+        }
+
+        Vector3 worldPos = FieldGridConfig.Instance.grid.GetCellCenterWorld(cell);
+        GameObject visualPrefab = selectedCard.placedVisualPrefab != null
+            ? selectedCard.placedVisualPrefab
+            : defaultPlacedEffectVisualPrefab;
+        if (visualPrefab != null)
+        {
+            Instantiate(visualPrefab, worldPos, Quaternion.identity);
+        }
 
         selectedSlot.ConsumeCard();
         ClearSelection();
