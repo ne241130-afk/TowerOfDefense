@@ -122,7 +122,7 @@ MonoBehaviour:
   heartFrames:
   - {fileID: -8579628779474086236, guid: 8b087f3bd00e646a6b38773f991b5bfc, type: 3}
   - {fileID: -9109254672528576270, guid: d463617e2e8884fd3b1f6be9c3c609b9, type: 3}
-  frameDuration: 0.1
+  frameDuration: 0.5
 --- !u!1 &2061067034317302375
 GameObject:
   m_ObjectHideFlags: 0
