@@ -305,7 +305,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AnimalController
   stats:
     animalName: kaba
-    diet: 1
+    diet: 2
     captureHitsRequired: 1
     squaresPerTurn: 1
     turnsPerMove: 1

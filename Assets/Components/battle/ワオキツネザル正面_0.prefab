@@ -305,7 +305,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AnimalController
   stats:
     animalName: kitune
-    diet: 0
+    diet: 1
     captureHitsRequired: 1
     squaresPerTurn: 3
     turnsPerMove: 1

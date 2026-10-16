@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 8352923532434887633}
   - component: {fileID: -4775586423337177632}
   m_Layer: 0
-  m_Name: "\u30EF\u30AA\u30AD\u30C4\u30CD\u30B5\u3099\u30EB\u6B63\u9762_0 1"
+  m_Name: "\u30EF\u30AA\u30AD\u30C4\u30CD\u30B6\u30EB\u6B63\u9762_0 1"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -106,7 +106,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AnimalController
   stats:
     animalName: kitune
-    diet: 0
+    diet: 1
+    captureHitsRequired: 1
     squaresPerTurn: 3
     turnsPerMove: 1
     swampImmune: 0
