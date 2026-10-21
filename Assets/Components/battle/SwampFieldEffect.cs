@@ -2,37 +2,22 @@ using UnityEngine;
 
 /// <summary>
 /// 沼地マスの効果。
-/// 通行自体は可能だが、経路探索上のコストを上げることで
-/// 「迂回できるなら迂回される」「迂回できなければ足止めを受けて通過する」の
-/// 両方の挙動を1つの仕組みで表現する。
+/// 通行可能な沼地マス。
+/// 経路コストは通常マスと同じにして、動物が沼地を回避しないようにする。
+/// ターンスキップ効果は AnimalController 側で「滞在中」に適用する。
 /// </summary>
 public class SwampFieldEffect : IFieldEffect
 {
-    private const int baseExtraDelay = 1;
-
     public bool OnAnimalEnter(AnimalController animal)
     {
-        if (animal.Stats.swampImmune) return true;
-
-        int extraDelay = Mathf.RoundToInt(
-            baseExtraDelay * animal.Stats.restrictionEffectMultiplier
-        );
-
-        animal.AddMoveDelay(extraDelay);
-
-        // 汗エフェクトを表示
-        animal.ShowSweatEffect();
+        animal.ApplySwampCatchOnEnter();
 
         return true;
     }
 
     public float GetPathCost(AnimalController animal)
     {
-        if (animal.Stats.swampImmune) return 1f;
-
-        float extraDelay = baseExtraDelay * animal.Stats.restrictionEffectMultiplier;
-        // 足止めが重いほど迂回のインセンティブを強くする(重みは要バランス調整)
-        return 1f + extraDelay * 3f;
+        return 1f;
     }
 }
 

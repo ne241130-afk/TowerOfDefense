@@ -30,6 +30,12 @@ public class AnimalController : MonoBehaviour, ITurnActor
     // 威嚇成功時、次のOnTurnTickで1回だけ移動をスキップする。
     private bool skipMoveThisTurn = false;
 
+    // 沼地に入った直後、次ターンのスキップを確定させる。
+    private bool skipNextTurnBySwamp = false;
+
+    // 1回の行動中に沼地へ入ったら、その時点で移動を打ち切る。
+    private bool caughtBySwampDuringMove = false;
+
     // <summary>
     // HP これまでに受けた捕獲判定の回数。
     // </summary>
@@ -114,11 +120,31 @@ public class AnimalController : MonoBehaviour, ITurnActor
         skipMoveThisTurn = true;
     }
 
+    /// <summary>
+    /// 沼地に入ったときの共通処理。
+    /// 「次ターンの行動スキップ」を確定させ、同ターンの追加移動を停止する。
+    /// </summary>
+    public void ApplySwampCatchOnEnter()
+    {
+        if (stats.swampImmune) return;
+
+        skipNextTurnBySwamp = true;
+        caughtBySwampDuringMove = true;
+        ShowSweatEffect();
+    }
+
     public void OnTurnTick()
     {
         if (skipMoveThisTurn)
         {
             skipMoveThisTurn = false;
+            return;
+        }
+
+        if (skipNextTurnBySwamp)
+        {
+            skipNextTurnBySwamp = false;
+            if (moveDelayTurns > 0) moveDelayTurns--;
             return;
         }
 
@@ -290,6 +316,8 @@ public class AnimalController : MonoBehaviour, ITurnActor
     {
         if (!TryBuildGoals(out var attractiveCells, out var goals)) return;
 
+        caughtBySwampDuringMove = false;
+
         // 現在いるマスが誘引マスなら移動せず待機する(食べている最中)
         if (attractiveCells.Contains(CurrentCell)) return;
 
@@ -312,6 +340,12 @@ public class AnimalController : MonoBehaviour, ITurnActor
             if (path == null || path.Count < 2) return;
 
             EnterCell(path[1]);
+
+            // 3マス移動などでも、途中で沼地に入ったらその時点で強制停止する。
+            if (caughtBySwampDuringMove)
+            {
+                return;
+            }
 
             // 誘引マスに到達したらそのマスで移動を止める
             if (attractiveCells.Contains(CurrentCell))
