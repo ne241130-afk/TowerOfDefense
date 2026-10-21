@@ -35,7 +35,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 5, y: 5}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2595037576763339344
 CanvasRenderer:
@@ -227,8 +227,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 474.9163, y: 490.78848}
-  m_SizeDelta: {x: 960, y: 960}
+  m_AnchoredPosition: {x: 2, y: 1.5}
+  m_SizeDelta: {x: 5, y: 5}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!223 &8041672749300577438
 Canvas:
@@ -251,7 +251,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 0
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 3
   m_TargetDisplay: 0
 --- !u!114 &6420707376198183712
 MonoBehaviour:
@@ -309,7 +309,11 @@ MonoBehaviour:
   sweatFrames:
   - {fileID: 4171103217143215535, guid: f2dd84996bcb24e5998b29c1cfffb63c, type: 3}
   - {fileID: -203841914511815491, guid: be9827f6c98944d6c833bf28026452ab, type: 3}
+  - {fileID: 4171103217143215535, guid: f2dd84996bcb24e5998b29c1cfffb63c, type: 3}
+  - {fileID: -203841914511815491, guid: be9827f6c98944d6c833bf28026452ab, type: 3}
   heartFrames:
+  - {fileID: -8579628779474086236, guid: 8b087f3bd00e646a6b38773f991b5bfc, type: 3}
+  - {fileID: -9109254672528576270, guid: d463617e2e8884fd3b1f6be9c3c609b9, type: 3}
   - {fileID: -8579628779474086236, guid: 8b087f3bd00e646a6b38773f991b5bfc, type: 3}
   - {fileID: -9109254672528576270, guid: d463617e2e8884fd3b1f6be9c3c609b9, type: 3}
   frameDuration: 0.5

@@ -2406,7 +2406,7 @@ MonoBehaviour:
     waveEnd: 0
     turnsPerSpawn: 4
     animalPrefabs:
-    - {fileID: 5271801123675058674, guid: dcb825f83af1642769de10ef313f766f, type: 3}
+    - {fileID: 6461936735922963314, guid: 4829df9a63d0d48faac3a01c57dff35d, type: 3}
     - {fileID: 2599670119332685034, guid: 5184a845c33e74a73b5544f12e8a01f3, type: 3}
     - {fileID: 8761484550491967488, guid: d08f384eceec74867b15b4508ed8fb73, type: 3}
     - {fileID: 8761484550491967488, guid: 583dd6702c1fe40cc8e9c14e45049554, type: 3}
@@ -2419,7 +2419,7 @@ MonoBehaviour:
     waveEnd: 3
     turnsPerSpawn: 4
     animalPrefabs:
-    - {fileID: 5271801123675058674, guid: dcb825f83af1642769de10ef313f766f, type: 3}
+    - {fileID: 6461936735922963314, guid: 4829df9a63d0d48faac3a01c57dff35d, type: 3}
     - {fileID: 2599670119332685034, guid: 5184a845c33e74a73b5544f12e8a01f3, type: 3}
     - {fileID: 8761484550491967488, guid: d08f384eceec74867b15b4508ed8fb73, type: 3}
     - {fileID: 8761484550491967488, guid: 583dd6702c1fe40cc8e9c14e45049554, type: 3}
@@ -2433,7 +2433,7 @@ MonoBehaviour:
     waveEnd: 10
     turnsPerSpawn: 3
     animalPrefabs:
-    - {fileID: 5271801123675058674, guid: dcb825f83af1642769de10ef313f766f, type: 3}
+    - {fileID: 6461936735922963314, guid: 4829df9a63d0d48faac3a01c57dff35d, type: 3}
     - {fileID: 2599670119332685034, guid: 5184a845c33e74a73b5544f12e8a01f3, type: 3}
     - {fileID: 8761484550491967488, guid: d08f384eceec74867b15b4508ed8fb73, type: 3}
     - {fileID: 8761484550491967488, guid: 583dd6702c1fe40cc8e9c14e45049554, type: 3}
@@ -2448,7 +2448,7 @@ MonoBehaviour:
     waveEnd: 15
     turnsPerSpawn: 2
     animalPrefabs:
-    - {fileID: 5271801123675058674, guid: dcb825f83af1642769de10ef313f766f, type: 3}
+    - {fileID: 6461936735922963314, guid: 4829df9a63d0d48faac3a01c57dff35d, type: 3}
     - {fileID: 2599670119332685034, guid: 5184a845c33e74a73b5544f12e8a01f3, type: 3}
     - {fileID: 8761484550491967488, guid: d08f384eceec74867b15b4508ed8fb73, type: 3}
     - {fileID: 8761484550491967488, guid: 583dd6702c1fe40cc8e9c14e45049554, type: 3}
@@ -2463,7 +2463,7 @@ MonoBehaviour:
     waveEnd: 20
     turnsPerSpawn: 2
     animalPrefabs:
-    - {fileID: 5271801123675058674, guid: dcb825f83af1642769de10ef313f766f, type: 3}
+    - {fileID: 6461936735922963314, guid: 4829df9a63d0d48faac3a01c57dff35d, type: 3}
     - {fileID: 2599670119332685034, guid: 5184a845c33e74a73b5544f12e8a01f3, type: 3}
     - {fileID: 8761484550491967488, guid: d08f384eceec74867b15b4508ed8fb73, type: 3}
     - {fileID: 8761484550491967488, guid: 583dd6702c1fe40cc8e9c14e45049554, type: 3}

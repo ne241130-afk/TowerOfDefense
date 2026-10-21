@@ -136,7 +136,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 0
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 3
   m_TargetDisplay: 0
 --- !u!114 &3211177683988600976
 MonoBehaviour:
@@ -194,7 +194,11 @@ MonoBehaviour:
   sweatFrames:
   - {fileID: 4171103217143215535, guid: f2dd84996bcb24e5998b29c1cfffb63c, type: 3}
   - {fileID: -203841914511815491, guid: be9827f6c98944d6c833bf28026452ab, type: 3}
+  - {fileID: 4171103217143215535, guid: f2dd84996bcb24e5998b29c1cfffb63c, type: 3}
+  - {fileID: -203841914511815491, guid: be9827f6c98944d6c833bf28026452ab, type: 3}
   heartFrames:
+  - {fileID: -8579628779474086236, guid: 8b087f3bd00e646a6b38773f991b5bfc, type: 3}
+  - {fileID: -9109254672528576270, guid: d463617e2e8884fd3b1f6be9c3c609b9, type: 3}
   - {fileID: -8579628779474086236, guid: 8b087f3bd00e646a6b38773f991b5bfc, type: 3}
   - {fileID: -9109254672528576270, guid: d463617e2e8884fd3b1f6be9c3c609b9, type: 3}
   frameDuration: 0.5
