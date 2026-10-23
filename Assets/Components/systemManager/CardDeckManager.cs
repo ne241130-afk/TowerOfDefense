@@ -37,8 +37,14 @@ public class CardDeckManager : MonoBehaviour
     // 最後にリロードしたターンの記憶
     private int lastReloadTurn = -1;
 
+    // ゲーム開始時の山札を保存
+    private List<CardData> initialDeck = new List<CardData>();
+
     private void Start()
     {
+        // 手札を引く前の山札を保存
+        initialDeck = new List<CardData>(deck);
+
         DrawInitialHand();
         UpdateHandUI();
 
@@ -76,6 +82,12 @@ public class CardDeckManager : MonoBehaviour
             int bonus = Mathf.RoundToInt(current * 0.5f);
             EconomyManager.Instance.AddMoney(bonus);
             Debug.Log($"[招き猫] Wave{completedWave} 終了ボーナス: {current} → {EconomyManager.Instance.CurrentMoney} (+{bonus})");
+        }
+
+        // 5 waveごとに山札と手札を初期化
+        if (completedWave % 5 == 0)
+        {
+            ResetDeckAndHand();
         }
     }
 
@@ -209,5 +221,30 @@ public class CardDeckManager : MonoBehaviour
                 cardSlots[i].gameObject.SetActive(false);
             }
         }
+    }
+
+    /// <summary>
+    /// 山札と手札をゲーム開始時の状態に戻す。
+    /// 5 waveごとに呼び出す。
+    /// </summary>
+    public void ResetDeckAndHand()
+    {
+        // 手札を空にする
+        hand.Clear();
+
+        // 山札を初期状態に戻す
+        deck.Clear();
+        deck.AddRange(initialDeck);
+
+        // リロード制限もリセット
+        lastReloadTurn = -1;
+
+        // 初期状態の山札から手札を引き直す
+        DrawInitialHand();
+
+        // 手札の表示を更新
+        UpdateHandUI();
+
+        Debug.Log("5 wave経過：山札と手札を初期状態に戻しました。");
     }
 }

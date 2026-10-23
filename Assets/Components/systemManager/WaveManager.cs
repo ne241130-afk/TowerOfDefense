@@ -25,6 +25,8 @@ public class WaveManager : MonoBehaviour, ITurnActor
     public UnityEvent<int> OnWaveCompleted;
     public UnityEvent<int> OnTurnChanged;
 
+    private bool isClearingWave = false;
+
     private void Awake()
     {
         Instance = this;
@@ -92,31 +94,40 @@ public class WaveManager : MonoBehaviour, ITurnActor
 
     private void CheckWaveClear()
     {
-        if (turnInWave >= turnsPerWave ||
-            captureCount >= capturesPerWave)
+        // すでにクリア処理中なら何もしない
+        if (isClearingWave) return;
+
+        if (turnInWave < turnsPerWave &&
+            captureCount < capturesPerWave)
         {
-            OnWaveCompleted?.Invoke(currentWave);
+            return;
+        }
 
-            // Wave 20をクリアしたらゲームクリア
-            if (currentWave >= 20)
+        isClearingWave = true;
+
+        OnWaveCompleted?.Invoke(currentWave);
+
+        // Wave 20をクリアしたらゲームクリア
+        if (currentWave >= 20)
+        {
+            if (SimpleGameManager.Instance != null)
             {
-                if (SimpleGameManager.Instance != null)
-                {
-                    SimpleGameManager.Instance.GameClear();
-                }
-                else
-                {
-                    Debug.LogError("SimpleGameManager が見つかりません。");
-                }
-
-                return;
+                SimpleGameManager.Instance.GameClear();
+            }
+            else
+            {
+                Debug.LogError("SimpleGameManager が見つかりません。");
             }
 
-            currentWave++;
-            turnInWave = 0;
-            captureCount = 0;
-
-            OnWaveStarted?.Invoke(currentWave);
+            return;
         }
+
+        currentWave++;
+        turnInWave = 0;
+        captureCount = 0;
+
+        OnWaveStarted?.Invoke(currentWave);
+
+        isClearingWave = false;
     }
 }
