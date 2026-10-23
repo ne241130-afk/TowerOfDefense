@@ -24,6 +24,13 @@ public class AnimalController : MonoBehaviour, ITurnActor
     // エフェクト用
     private AnimalStatusEffectUI statusEffectUI;
 
+    //HPバー
+    [Header("HPバー")]
+    [SerializeField] private AnimalHPBar hpBarPrefab;
+    [SerializeField] private Vector3 hpBarOffset = new Vector3(0f, -4f, 0f);
+    
+    private AnimalHPBar hpBarInstance;
+
     // 「Nターンに1回しか動けない」動物用のカウンタ
     private int turnCounter = 0;
 
@@ -62,6 +69,13 @@ public class AnimalController : MonoBehaviour, ITurnActor
         int required = Mathf.Max(1, stats.captureHitsRequired);
         int remaining = Mathf.Max(0, required - captureHits);
 
+        Debug.Log($"HPバー更新確認: {stats.animalName}, 捕獲判定={captureHits}/{required}, HPバー={(hpBarInstance != null ? "あり" : "なし")}");
+
+        if (hpBarInstance != null)
+        {
+            hpBarInstance.UpdateHP(captureHits, required);
+        }
+
         Debug.Log($"{stats.animalName}: ダメージ {actualDamage} / 残HP {remaining}");
         return captureHits >= required;
     }
@@ -69,6 +83,17 @@ public class AnimalController : MonoBehaviour, ITurnActor
     private void Start()
     {
         statusEffectUI = GetComponentInChildren<AnimalStatusEffectUI>();
+
+        //HPバーの生成
+        if (hpBarPrefab != null)
+        {
+            hpBarInstance = Instantiate(hpBarPrefab, transform);
+            hpBarInstance.transform.localPosition = hpBarOffset;
+            hpBarInstance.transform.localRotation = Quaternion.identity;
+            hpBarInstance.transform.localScale = new Vector3(0.08f, 0.1f, 0.1f);
+            
+            hpBarInstance.UpdateHP(captureHits, stats.captureHitsRequired);
+        }
 
         if (FieldGridConfig.Instance == null || FieldGridConfig.Instance.grid == null)
         {

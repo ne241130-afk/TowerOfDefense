@@ -317,3 +317,5 @@ MonoBehaviour:
     restrictionEffectMultiplier: 0.508
     sleepEffectMultiplier: 1
     lockTurnReduction: 0
+  hpBarPrefab: {fileID: 3395734444148684133, guid: d539a7bb27bd947e997bb1fceeb47c62, type: 3}
+  hpBarOffset: {x: 0, y: -4, z: 0}
