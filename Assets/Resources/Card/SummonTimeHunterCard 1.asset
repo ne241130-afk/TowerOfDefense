@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16e17906eadc2416e9f7642628909c1b, type: 3}
   m_Name: SummonTimeHunterCard 1
   m_EditorClassIdentifier: Assembly-CSharp::CardData
-  cardName: "\u30CF\u30F3\u30BF\u30FC"
-  description: "\u52D5\u7269\u3092\u6355\u7372\u3059\u308B\u3002"
-  icon: {fileID: 7865408360496738823, guid: 9ad0b0aabad9b40e9b13d75fd48ec207, type: 3}
+  cardName: "\u6D3E\u9063\u30CF\u30F3\u30BF\u30FC"
+  description: "\u52D5\u7269\u3092\u6355\u7372\u3059\u308B\u3002\uFF13\u30BF\u30FC\u30F3\u3067\u5E30\u308A\u307E\u3059\u3002"
+  icon: {fileID: 5767236647764671861, guid: e68e6583622a845c18b77ccf234d619b, type: 3}
   effectType: 3
   areaRadius: 1
-  placedVisualPrefab: {fileID: 0}
+  placedVisualPrefab: {fileID: 3084717665577791915, guid: b0955365dd8fa4f4db607e7d25bdaaf6, type: 3}
   cost: 50
   hunterPrefab: {fileID: 3486390734863531089, guid: 0bd19f9fd4d7842a1a8748703e37fd31, type: 3}
   timedHunterLifetimeTurns: 3
