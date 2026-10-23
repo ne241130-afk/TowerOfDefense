@@ -47,6 +47,11 @@ public class WallBlockMap : MonoBehaviour
         return wallCells.Add(cell);
     }
 
+    public void Clear()
+    {
+        wallCells.Clear();
+    }
+
     public bool CanPlaceWall(Vector3Int wallCell, out string reason)
     {
         reason = null;

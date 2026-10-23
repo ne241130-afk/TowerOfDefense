@@ -69,6 +69,11 @@ public class FieldEffectMap : MonoBehaviour
         effects.Remove(cell);
     }
 
+    public void Clear()
+    {
+        effects.Clear();
+    }
+
     public bool TryGetEffect(Vector3Int cell, out IFieldEffect effect)
     {
         return effects.TryGetValue(cell, out effect);

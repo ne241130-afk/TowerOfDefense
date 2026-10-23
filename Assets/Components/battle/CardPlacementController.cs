@@ -30,6 +30,7 @@ public class CardPlacementController : MonoBehaviour
     private CardData selectedCard;
     private CardSlotUI selectedSlot;
     private readonly List<GameObject> highlightInstances = new List<GameObject>();
+    private readonly List<GameObject> placedBoardObjects = new List<GameObject>();
     private Vector3Int? lastHoverCell;
 
     /// <summary>highlightPrefab未設定時に使うフォールバック用スプライト(起動時に1x1テクスチャから生成)。</summary>
@@ -203,6 +204,33 @@ public class CardPlacementController : MonoBehaviour
         highlightInstances.Clear();
     }
 
+    private void RegisterPlacedBoardObject(GameObject boardObject)
+    {
+        if (boardObject == null) return;
+        placedBoardObjects.Add(boardObject);
+    }
+
+    public void ClearPlacedBoardItems()
+    {
+        FieldEffectMap.Instance?.Clear();
+        WallBlockMap.Instance?.Clear();
+
+        for (int i = placedBoardObjects.Count - 1; i >= 0; i--)
+        {
+            var boardObject = placedBoardObjects[i];
+            if (boardObject != null)
+            {
+                Destroy(boardObject);
+            }
+        }
+
+        placedBoardObjects.Clear();
+        HideHighlights();
+        ClearSelection();
+
+        Debug.Log("[BoardReset] 5Waveごとの盤面クリア: 置かれたアイテムをすべて削除しました。");
+    }
+
     private void TryPlaceAt(Vector3Int center)
     {
         WallBlockMap.EnsureExists(FieldGridConfig.Instance != null ? FieldGridConfig.Instance.transform : null);
@@ -296,60 +324,58 @@ public class CardPlacementController : MonoBehaviour
 
         //鎖で追加
         if (selectedCard.effectType == CardEffectType.ChainLock)
-{
-    // 2つの出口で共有する鎖の効果を1つだけ作る
-    IFieldEffect chainEffect =
-        CardEffectFactory.CreateEffect(CardEffectType.ChainLock);
-
-    if (chainEffect != null)
-    {
-        foreach (var goalCell in FieldGridConfig.Instance.goalCells)
         {
-            FieldEffectMap.Instance.SetEffect(goalCell, chainEffect);
+            // 2つの出口で共有する鎖の効果を1つだけ作る
+            IFieldEffect chainEffect =
+                CardEffectFactory.CreateEffect(CardEffectType.ChainLock);
+
+            if (chainEffect != null)
+            {
+                foreach (var goalCell in FieldGridConfig.Instance.goalCells)
+                {
+                    FieldEffectMap.Instance.SetEffect(goalCell, chainEffect);
+                }
+            }
+
+            // 鎖の見た目は2つの出口の中央に1つだけ表示
+            if (selectedCard.placedVisualPrefab != null &&
+                FieldGridConfig.Instance.goalCells.Count >= 2)
+            {
+                Vector3 pos1 =
+                    FieldGridConfig.Instance.grid.GetCellCenterWorld(
+                        FieldGridConfig.Instance.goalCells[0]);
+
+                Vector3 pos2 =
+                    FieldGridConfig.Instance.grid.GetCellCenterWorld(
+                        FieldGridConfig.Instance.goalCells[1]);
+
+                Vector3 visualPosition = (pos1 + pos2) / 2f;
+
+                // ここで鎖の画像を生成
+                GameObject chainVisual = Instantiate(
+                    selectedCard.placedVisualPrefab,
+                    visualPosition,
+                    Quaternion.identity
+                );
+                RegisterPlacedBoardObject(chainVisual);
+
+                // ChainLockFieldEffectに鎖の画像を渡す
+                if (chainEffect is ChainLockFieldEffect chainLockEffect)
+                {
+                    chainLockEffect.SetVisual(chainVisual);
+                }
+            }
+
+            selectedSlot.ConsumeCard();
+            ClearSelection();
+
+            if (TurnManager.Instance != null)
+            {
+                TurnManager.Instance.AdvanceTurn();
+            }
+
+            return;
         }
-    }
-
-    // 鎖の見た目は2つの出口の中央に1つだけ表示
-    if (selectedCard.placedVisualPrefab != null &&
-        FieldGridConfig.Instance.goalCells.Count >= 2)
-    {
-        Vector3 pos1 =
-            FieldGridConfig.Instance.grid.GetCellCenterWorld(
-                FieldGridConfig.Instance.goalCells[0]);
-
-        Vector3 pos2 =
-            FieldGridConfig.Instance.grid.GetCellCenterWorld(
-                FieldGridConfig.Instance.goalCells[1]);
-
-        Vector3 visualPosition = (pos1 + pos2) / 2f;
-
-        // ここで鎖の画像を生成
-        GameObject chainVisual = Instantiate(
-            selectedCard.placedVisualPrefab,
-            visualPosition,
-            Quaternion.identity
-        );
-
-        // ChainLockFieldEffectに鎖の画像を渡す
-        if (chainEffect is ChainLockFieldEffect chainLockEffect)
-        {
-            chainLockEffect.SetVisual(chainVisual);
-        }
-    }
-
-    selectedSlot.ConsumeCard();
-    ClearSelection();
-
-    if (TurnManager.Instance != null)
-    {
-        TurnManager.Instance.AdvanceTurn();
-    }
-
-    return;
-}
- 
-
-
 
         var cells = EffectAreaUtility.GetSquareArea(center, selectedCard.areaRadius);
 
@@ -369,14 +395,15 @@ public class CardPlacementController : MonoBehaviour
 
             if (visualPrefab != null)
             {
-                Instantiate(
+                var placedVisual = Instantiate(
                     visualPrefab,
                     FieldGridConfig.Instance.grid.GetCellCenterWorld(cell),
                     Quaternion.identity
                 );
+                RegisterPlacedBoardObject(placedVisual);
             }
         }
-        
+
         // カードを使用
         selectedSlot.ConsumeCard();
 
@@ -417,6 +444,7 @@ public class CardPlacementController : MonoBehaviour
 
         Vector3 worldPos = FieldGridConfig.Instance.grid.GetCellCenterWorld(cell);
         var instance = Instantiate(selectedCard.hunterPrefab, worldPos, Quaternion.identity);
+        RegisterPlacedBoardObject(instance);
 
         // カードのareaRadiusをハンターのactionRadiusとして設定
         var hunter = instance.GetComponent<HunterController>();
@@ -437,7 +465,8 @@ public class CardPlacementController : MonoBehaviour
 
         if (visualPrefab != null)
         {
-            Instantiate(visualPrefab, worldPos, Quaternion.identity);
+            var placedVisual = Instantiate(visualPrefab, worldPos, Quaternion.identity);
+            RegisterPlacedBoardObject(placedVisual);
         }
 
         selectedSlot.ConsumeCard();
@@ -474,7 +503,8 @@ public class CardPlacementController : MonoBehaviour
         GameObject visualPrefab = selectedCard.placedVisualPrefab != null
             ? selectedCard.placedVisualPrefab
             : defaultPlacedEffectVisualPrefab;
-        Instantiate(visualPrefab, worldPos, Quaternion.identity);
+        var placedVisual = Instantiate(visualPrefab, worldPos, Quaternion.identity);
+        RegisterPlacedBoardObject(placedVisual);
 
         selectedSlot.ConsumeCard();
         ClearSelection();
@@ -504,7 +534,8 @@ public class CardPlacementController : MonoBehaviour
         GameObject visualPrefab = selectedCard.placedVisualPrefab != null
             ? selectedCard.placedVisualPrefab
             : defaultPlacedEffectVisualPrefab;
-        Instantiate(visualPrefab, worldPos, Quaternion.identity);
+        var placedVisual = Instantiate(visualPrefab, worldPos, Quaternion.identity);
+        RegisterPlacedBoardObject(placedVisual);
 
         selectedSlot.ConsumeCard();
         ClearSelection();
@@ -531,7 +562,8 @@ public class CardPlacementController : MonoBehaviour
             : defaultPlacedEffectVisualPrefab;
         if (visualPrefab != null)
         {
-            Instantiate(visualPrefab, worldPos, Quaternion.identity);
+            var placedVisual = Instantiate(visualPrefab, worldPos, Quaternion.identity);
+            RegisterPlacedBoardObject(placedVisual);
         }
 
         selectedSlot.ConsumeCard();
@@ -582,7 +614,8 @@ public class CardPlacementController : MonoBehaviour
         if (visualPrefab != null)
         {
             Vector3 worldPos = FieldGridConfig.Instance.grid.GetCellCenterWorld(center);
-            Instantiate(visualPrefab, worldPos, Quaternion.identity);
+            var placedVisual = Instantiate(visualPrefab, worldPos, Quaternion.identity);
+            RegisterPlacedBoardObject(placedVisual);
         }
 
         selectedSlot.ConsumeCard();

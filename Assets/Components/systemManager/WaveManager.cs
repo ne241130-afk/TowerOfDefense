@@ -120,11 +120,17 @@ public class WaveManager : MonoBehaviour, ITurnActor
             }
 
             return;
+
         }
 
         currentWave++;
         turnInWave = 0;
         captureCount = 0;
+
+        if (currentWave % 5 == 0)
+        {
+            CardPlacementController.Instance?.ClearPlacedBoardItems();
+        }
 
         OnWaveStarted?.Invoke(currentWave);
 

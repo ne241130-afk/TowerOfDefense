@@ -31,8 +31,13 @@ public class IntimidateActionController : MonoBehaviour
     public Color aimingButtonColor = new Color(1f, 0.8f, 0.45f, 1f);
 
     [Header("後退先プレビュー")]
-    [Tooltip("威嚇モード中、後退先セルに表示する色")]
-    public Color retreatPreviewColor = new Color(0.5f, 0.8f, 1f, 0.35f);
+    [Tooltip("威嚇モード中、後退先セルに表示する塗りつぶし色。赤の次ターンハイライトと同じ視覚スタイルに合わせる")]
+    public Color retreatPreviewColor = new Color(0.10f, 0.45f, 1f, 0.28f);
+    [Tooltip("枠線の濃い青色。赤の枠線と同じ見え方にするため、濃く・少し透けた感じにする")]
+    public Color retreatPreviewBorderColor = new Color(0.08f, 0.20f, 1f, 0.95f);
+    [Tooltip("枠線の太さ。赤の nextCellBorderWidth=0.5 を基準にする")]
+    [Range(0.02f, 1f)]
+    public float retreatPreviewBorderThickness = 0.5f;
 
     public bool IsAiming => isAiming;
 
@@ -40,6 +45,8 @@ public class IntimidateActionController : MonoBehaviour
     private bool runtimeClickListenerAdded;
     private GameObject retreatPreviewObject;
     private SpriteRenderer retreatPreviewRenderer;
+    private GameObject retreatPreviewBorderObject;
+    private LineRenderer retreatPreviewBorderRenderer;
     private Texture2D retreatPreviewTexture;
     private Sprite retreatPreviewSprite;
 
@@ -62,6 +69,20 @@ public class IntimidateActionController : MonoBehaviour
             buttonImage = intimidateButton.targetGraphic as Image;
         }
 
+        // 以前の青ハイライト残骸がシーンに残ると、今の値を変更しても見えている物体が別になる。
+        // ここで旧プレビューを破棄して、現在のコントローラが唯一の描画元になるようにする。
+        var oldPreview = GameObject.Find("IntimidateRetreatPreview");
+        if (oldPreview != null)
+        {
+            DestroyImmediate(oldPreview);
+        }
+
+        var oldPreviewBorder = GameObject.Find("IntimidateRetreatPreviewBorder");
+        if (oldPreviewBorder != null)
+        {
+            DestroyImmediate(oldPreviewBorder);
+        }
+
         retreatPreviewTexture = new Texture2D(1, 1, TextureFormat.RGBA32, mipChain: false)
         {
             filterMode = FilterMode.Point,
@@ -76,11 +97,66 @@ public class IntimidateActionController : MonoBehaviour
             new Vector2(0.5f, 0.5f),
             1f);
 
+        // ここが重要: 赤のハイライトは FieldGridConfig / Grid のワールド空間に属している。
+        // その親に合わせないと、セル座標を UI のローカル座標のように扱って小さく、あるいは見えなくなる。
         retreatPreviewObject = new GameObject("IntimidateRetreatPreview");
         retreatPreviewRenderer = retreatPreviewObject.AddComponent<SpriteRenderer>();
         retreatPreviewRenderer.sprite = retreatPreviewSprite;
-        retreatPreviewRenderer.sortingOrder = 70;
-        retreatPreviewObject.SetActive(false);
+        retreatPreviewRenderer.material = new Material(Shader.Find("Sprites/Default"));
+        retreatPreviewRenderer.sortingOrder = 45;
+        retreatPreviewRenderer.enabled = false;
+
+        retreatPreviewBorderObject = new GameObject("IntimidateRetreatPreviewBorder");
+        retreatPreviewBorderRenderer = retreatPreviewBorderObject.AddComponent<LineRenderer>();
+        retreatPreviewBorderRenderer.alignment = LineAlignment.View;
+        retreatPreviewBorderRenderer.useWorldSpace = true;
+        retreatPreviewBorderRenderer.loop = true;
+        retreatPreviewBorderRenderer.positionCount = 4;
+        retreatPreviewBorderRenderer.material = new Material(Shader.Find("Sprites/Default"));
+        retreatPreviewBorderRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        retreatPreviewBorderRenderer.receiveShadows = false;
+        retreatPreviewBorderRenderer.textureMode = LineTextureMode.Stretch;
+        retreatPreviewBorderRenderer.startWidth = retreatPreviewBorderThickness;
+        retreatPreviewBorderRenderer.endWidth = retreatPreviewBorderThickness;
+        retreatPreviewBorderRenderer.startColor = retreatPreviewBorderColor;
+        retreatPreviewBorderRenderer.endColor = retreatPreviewBorderColor;
+        retreatPreviewBorderRenderer.sortingOrder = 46;
+        retreatPreviewBorderRenderer.enabled = false;
+
+        EnsurePreviewParent();
+    }
+
+    private void EnsurePreviewParent()
+    {
+        Transform targetParent = null;
+
+        if (FieldGridConfig.Instance != null && FieldGridConfig.Instance.transform != null)
+        {
+            targetParent = FieldGridConfig.Instance.transform;
+        }
+        else
+        {
+            var pathVisualization = FindFirstObjectByType<AnimalPathVisualization>();
+            if (pathVisualization != null)
+            {
+                targetParent = pathVisualization.transform;
+            }
+        }
+
+        if (targetParent == null)
+        {
+            return;
+        }
+
+        if (retreatPreviewObject != null && retreatPreviewObject.transform.parent != targetParent)
+        {
+            retreatPreviewObject.transform.SetParent(targetParent, worldPositionStays: false);
+        }
+
+        if (retreatPreviewBorderObject != null && retreatPreviewBorderObject.transform.parent != targetParent)
+        {
+            retreatPreviewBorderObject.transform.SetParent(targetParent, worldPositionStays: false);
+        }
     }
 
     private void Start()
@@ -113,6 +189,7 @@ public class IntimidateActionController : MonoBehaviour
             EconomyManager.Instance.OnMoneyChanged.AddListener(OnMoneyChanged);
         }
 
+        EnsurePreviewParent();
         ApplyModeVisual(false);
         RefreshButtonState();
     }
@@ -132,6 +209,10 @@ public class IntimidateActionController : MonoBehaviour
         if (retreatPreviewObject != null)
         {
             Destroy(retreatPreviewObject);
+        }
+        if (retreatPreviewBorderObject != null)
+        {
+            Destroy(retreatPreviewBorderObject);
         }
         if (retreatPreviewSprite != null)
         {
@@ -267,6 +348,8 @@ public class IntimidateActionController : MonoBehaviour
             return;
         }
 
+        EnsurePreviewParent();
+
         if (FieldGridConfig.Instance == null || FieldGridConfig.Instance.grid == null)
         {
             HideRetreatPreview();
@@ -298,30 +381,56 @@ public class IntimidateActionController : MonoBehaviour
     private void ShowRetreatPreview(Vector3Int cell)
     {
         if (retreatPreviewObject == null || retreatPreviewRenderer == null ||
+            retreatPreviewBorderObject == null || retreatPreviewBorderRenderer == null ||
             FieldGridConfig.Instance == null || FieldGridConfig.Instance.grid == null)
         {
             return;
         }
 
-        Vector3 worldPos = FieldGridConfig.Instance.grid.GetCellCenterWorld(cell);
-        worldPos.z = -0.2f;
-        retreatPreviewObject.transform.position = worldPos;
+        Vector3 cellCenter = FieldGridConfig.Instance.grid.GetCellCenterWorld(cell);
+        cellCenter.z = -0.2f;
+
+        retreatPreviewObject.transform.position = cellCenter;
+        retreatPreviewBorderObject.transform.position = cellCenter;
 
         Vector3 cellSize = FieldGridConfig.Instance.grid.cellSize;
-        retreatPreviewObject.transform.localScale = new Vector3(cellSize.x, cellSize.y, 1f);
-        retreatPreviewRenderer.color = retreatPreviewColor;
+        float scale = 4.6f;
+        retreatPreviewObject.transform.localScale = new Vector3(
+            cellSize.x * scale,
+            cellSize.y * scale,
+            1f);
 
-        if (!retreatPreviewObject.activeSelf)
-        {
-            retreatPreviewObject.SetActive(true);
-        }
+        retreatPreviewRenderer.enabled = true;
+        retreatPreviewRenderer.color = retreatPreviewColor;
+        retreatPreviewRenderer.sortingOrder = 45;
+
+        retreatPreviewBorderRenderer.enabled = true;
+        retreatPreviewBorderRenderer.startWidth = retreatPreviewBorderThickness;
+        retreatPreviewBorderRenderer.endWidth = retreatPreviewBorderThickness;
+        retreatPreviewBorderRenderer.startColor = retreatPreviewBorderColor;
+        retreatPreviewBorderRenderer.endColor = retreatPreviewBorderColor;
+        retreatPreviewBorderRenderer.sortingOrder = 46;
+
+        float halfWidth = cellSize.x * scale * 0.5f;
+        float halfHeight = cellSize.y * scale * 0.5f;
+        float borderZ = cellCenter.z - 0.01f;
+
+        // 赤の nextCellHighlight と同じ四角枠の描画順序と頂点構成を採用する。
+        retreatPreviewBorderRenderer.SetPosition(0, new Vector3(cellCenter.x - halfWidth, cellCenter.y - halfHeight, borderZ));
+        retreatPreviewBorderRenderer.SetPosition(1, new Vector3(cellCenter.x - halfWidth, cellCenter.y + halfHeight, borderZ));
+        retreatPreviewBorderRenderer.SetPosition(2, new Vector3(cellCenter.x + halfWidth, cellCenter.y + halfHeight, borderZ));
+        retreatPreviewBorderRenderer.SetPosition(3, new Vector3(cellCenter.x + halfWidth, cellCenter.y - halfHeight, borderZ));
     }
 
     private void HideRetreatPreview()
     {
-        if (retreatPreviewObject != null && retreatPreviewObject.activeSelf)
+        if (retreatPreviewObject != null && retreatPreviewRenderer != null)
         {
-            retreatPreviewObject.SetActive(false);
+            retreatPreviewRenderer.enabled = false;
+        }
+        if (retreatPreviewBorderObject != null && retreatPreviewBorderRenderer != null)
+        {
+            retreatPreviewBorderRenderer.enabled = false;
         }
     }
 
