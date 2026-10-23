@@ -115,7 +115,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 190cf324127cf4f7183a1374a755782a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnimalStatusEffectUI
-  effectImage: {fileID: 0}
+  effectImage: {fileID: 2133224796321687299}
   sweatFrames:
   - {fileID: 4171103217143215535, guid: f2dd84996bcb24e5998b29c1cfffb63c, type: 3}
   - {fileID: -203841914511815491, guid: be9827f6c98944d6c833bf28026452ab, type: 3}

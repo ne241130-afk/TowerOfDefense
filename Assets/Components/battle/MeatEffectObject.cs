@@ -45,7 +45,8 @@ public class MeatEffectObject : MonoBehaviour, ITurnActor
     {
         if (AnimalOccupancyMap.Instance == null) return;
         if (!AnimalOccupancyMap.Instance.TryGetAnimalAt(myCell, out var animal)) return;
-        if (animal.Stats.diet != AnimalDiet.Carnivore) return;
+        if (animal.Stats.diet != AnimalDiet.Carnivore &&
+            animal.Stats.diet != AnimalDiet.Omnivore) return;
 
         occupiedTurns++;
         if (occupiedTurns >= despawnTurns)

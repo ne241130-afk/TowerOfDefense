@@ -30,5 +30,5 @@ public class MeatFieldEffect : IFieldEffect, IAttractiveEffect
     /// 肉食動物のみを誘引する。
     /// </summary>
     public bool IsAttractive(AnimalController animal)
-        => animal.Stats.diet == AnimalDiet.Carnivore;
+        => animal.Stats.diet == AnimalDiet.Carnivore || animal.Stats.diet == AnimalDiet.Omnivore;
 }
