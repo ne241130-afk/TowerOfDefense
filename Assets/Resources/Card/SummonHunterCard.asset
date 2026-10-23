@@ -13,11 +13,12 @@ MonoBehaviour:
   m_Name: SummonHunterCard
   m_EditorClassIdentifier: Assembly-CSharp::CardData
   cardName: "\u30CF\u30F3\u30BF\u30FC"
-  description: "\u7BC4\u56F2\u5185\u306B\u5165\u3063\u305F\u52D5\u7269\u3092\u307B\u304B\u304F\u3059\u308B\u3002\n\u30B2\u30FC\u30E0\u304C\u7D42\u308F\u308B\u307E\u3067\u30D5\u30A3\u30FC\u30EB\u30C9\u306B\u3044\u307E\u3059\u3002"
+  description: "\u7BC4\u56F2\u5185\u306B\u5165\u3063\u305F\u52D5\u7269\u3092\u307B\u304B\u304F\u3059\u308B\u3002\n\u30B2\u30FC\u30E0\u304C\u7D42\u308F\u308B\u307E\u3067\u30D5\u30A3\u30FC\u30EB\u30C9\u306B\u3044\u308B\u3002"
   icon: {fileID: 362730189006845300, guid: 5369e423ab05a40febbf32cf146e7dee, type: 3}
   effectType: 2
   areaRadius: 1
   placedVisualPrefab: {fileID: 0}
   cost: 50
   hunterPrefab: {fileID: 3486390734863531089, guid: 0bd19f9fd4d7842a1a8748703e37fd31, type: 3}
+  timedHunterLifetimeTurns: 3
   bonusAmount: 100

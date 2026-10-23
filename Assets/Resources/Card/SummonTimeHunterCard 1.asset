@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SummonTimeHunterCard 1
   m_EditorClassIdentifier: Assembly-CSharp::CardData
   cardName: "\u6D3E\u9063\u30CF\u30F3\u30BF\u30FC"
-  description: "\u52D5\u7269\u3092\u6355\u7372\u3059\u308B\u3002\uFF13\u30BF\u30FC\u30F3\u3067\u5E30\u308A\u307E\u3059\u3002"
+  description: "\u52D5\u7269\u3092\u6355\u7372\u3059\u308B\u3002\uFF13\u30BF\u30FC\u30F3\u3067\u5E30\u308B\u3002"
   icon: {fileID: 5767236647764671861, guid: e68e6583622a845c18b77ccf234d619b, type: 3}
   effectType: 3
   areaRadius: 1
