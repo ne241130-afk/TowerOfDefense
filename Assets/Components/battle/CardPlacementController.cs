@@ -339,17 +339,11 @@ public class CardPlacementController : MonoBehaviour
 
             // 鎖の見た目は2つの出口の中央に1つだけ表示
             if (selectedCard.placedVisualPrefab != null &&
-                FieldGridConfig.Instance.goalCells.Count >= 2)
+                FieldGridConfig.Instance.goalCells.Count == 1)
             {
-                Vector3 pos1 =
+                Vector3 visualPosition =
                     FieldGridConfig.Instance.grid.GetCellCenterWorld(
                         FieldGridConfig.Instance.goalCells[0]);
-
-                Vector3 pos2 =
-                    FieldGridConfig.Instance.grid.GetCellCenterWorld(
-                        FieldGridConfig.Instance.goalCells[1]);
-
-                Vector3 visualPosition = (pos1 + pos2) / 2f;
 
                 // ここで鎖の画像を生成
                 GameObject chainVisual = Instantiate(
