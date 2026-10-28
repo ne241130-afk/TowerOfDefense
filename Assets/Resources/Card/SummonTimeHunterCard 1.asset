@@ -17,8 +17,8 @@ MonoBehaviour:
   icon: {fileID: 5767236647764671861, guid: e68e6583622a845c18b77ccf234d619b, type: 3}
   effectType: 3
   areaRadius: 1
-  placedVisualPrefab: {fileID: 3084717665577791915, guid: b0955365dd8fa4f4db607e7d25bdaaf6, type: 3}
+  placedVisualPrefab: {fileID: 0}
   cost: 50
-  hunterPrefab: {fileID: 3486390734863531089, guid: 0bd19f9fd4d7842a1a8748703e37fd31, type: 3}
+  hunterPrefab: {fileID: 3084717665577791915, guid: b0955365dd8fa4f4db607e7d25bdaaf6, type: 3}
   timedHunterLifetimeTurns: 3
   bonusAmount: 100
