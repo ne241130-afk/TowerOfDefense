@@ -107,9 +107,12 @@ MonoBehaviour:
   stats:
     animalName: Lion
     diet: 0
+    captureHitsRequired: 1
     squaresPerTurn: 1
     turnsPerMove: 1
     swampImmune: 0
     restrictionEffectMultiplier: 1
     sleepEffectMultiplier: 1
     lockTurnReduction: 0
+  hpBarPrefab: {fileID: 0}
+  hpBarOffset: {x: 0, y: -4, z: 0}
