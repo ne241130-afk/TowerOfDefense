@@ -40,11 +40,21 @@ public class MultiplayerPlayerIdentity : NetworkBehaviour
     {
         // Hookはサーバー側でも走るため、クライアント準備前には触らない。
         if (!NetworkClient.active) return;
-        if (netIdentity == null) return;
-        if (!netIdentity.isClient) return;
-        if (!netIdentity.isOwned) return;
+        if (!IsOwnedSafe()) return;
 
         MultiplayerRuntime.SetLocalPlayer(this, latestPlayerIndex);
+    }
+
+    private bool IsOwnedSafe()
+    {
+        try
+        {
+            return isOwned;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     [Command]
@@ -62,14 +72,14 @@ public class MultiplayerPlayerIdentity : NetworkBehaviour
     [Mirror.ClientRpc]
     public void RpcApplyPrivateState(string handCsv, int money)
     {
-        if (netIdentity == null || !netIdentity.isOwned) return;
+        if (!IsOwnedSafe()) return;
         MultiplayerMatchCoordinator.ApplyLocalPrivateState(handCsv, money);
     }
 
     [Mirror.ClientRpc]
     public void RpcSetStatus(string message)
     {
-        if (netIdentity == null || !netIdentity.isOwned) return;
+        if (!IsOwnedSafe()) return;
         MultiplayerRuntime.SetStatus(message);
     }
 }

@@ -1,6 +1,7 @@
 using Mirror;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Reflection;
 
 public class MultiplayerNetworkManager : NetworkManager
 {
@@ -29,7 +30,7 @@ public class MultiplayerNetworkManager : NetworkManager
 
         maxConnections = 2;
         dontDestroyOnLoad = true;
-        autoCreatePlayer = false;
+        TryDisableAutoCreatePlayer();
 
         base.Awake();
         Instance = this;
@@ -135,5 +136,22 @@ public class MultiplayerNetworkManager : NetworkManager
     {
         base.OnClientDisconnect();
         MultiplayerRuntime.LeaveMultiplayerSession("Disconnected");
+    }
+
+    private void TryDisableAutoCreatePlayer()
+    {
+        // Mirror version differences: some versions expose autoCreatePlayer, others do not.
+        FieldInfo field = typeof(NetworkManager).GetField("autoCreatePlayer", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        if (field != null && field.FieldType == typeof(bool))
+        {
+            field.SetValue(this, false);
+            return;
+        }
+
+        PropertyInfo property = typeof(NetworkManager).GetProperty("autoCreatePlayer", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        if (property != null && property.PropertyType == typeof(bool) && property.CanWrite)
+        {
+            property.SetValue(this, false);
+        }
     }
 }
