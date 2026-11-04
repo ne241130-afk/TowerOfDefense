@@ -68,7 +68,7 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
     {
         base.OnStartClient();
         MultiplayerRuntime.EnterMultiplayerSession();
-        MultiplayerRuntime.SetStatus("対戦準備中: 相手の同期を待機しています...");
+        MultiplayerRuntime.SetStatus("Preparing match: waiting for sync...");
         NotifyPublicStateChanged();
     }
 
@@ -117,7 +117,7 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
             if (!playerStates.TryGetValue(pair.Key, out ServerPlayerState state)) continue;
             SetPublicStateFromServer(pair.Key, state);
             pair.Value.RpcApplyPrivateState(string.Join("|", state.hand), state.money);
-            pair.Value.RpcSetStatus(pair.Key == 0 ? "Player1: 左側を操作してください" : "Player2: 右側を操作してください");
+            pair.Value.RpcSetStatus(pair.Key == 0 ? "Player1: control LEFT side" : "Player2: control RIGHT side");
         }
 
         endedThisRound[0] = false;
@@ -178,13 +178,13 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
 
         if (IsPlayerAlreadyEnded(sender.PlayerIndex))
         {
-            sender.RpcSetStatus("あなたはこのターンの行動を完了しています。相手を待ってください。");
+            sender.RpcSetStatus("You already ended this turn. Waiting for opponent...");
             return;
         }
 
         if (!MultiplayerPlayAreaUtility.IsCellAllowedForPlayer(centerCell, sender.PlayerIndex))
         {
-            sender.RpcSetStatus("操作エリア外には配置できません");
+            sender.RpcSetStatus("Out of your playable area");
             return;
         }
 
@@ -193,20 +193,20 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
         int handIndex = state.hand.FindIndex(id => id == cardId);
         if (handIndex < 0)
         {
-            sender.RpcSetStatus("そのカードは手札にありません");
+            sender.RpcSetStatus("That card is not in your hand");
             return;
         }
 
         CardData card = MultiplayerCardCatalog.Find(cardId);
         if (card == null)
         {
-            sender.RpcSetStatus("カードデータの同期に失敗しました");
+            sender.RpcSetStatus("Card sync failed");
             return;
         }
 
         if (card.cost > state.money)
         {
-            sender.RpcSetStatus("所持金が足りません");
+            sender.RpcSetStatus("Not enough money");
             return;
         }
 
@@ -234,7 +234,7 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
 
         if (IsPlayerAlreadyEnded(sender.PlayerIndex))
         {
-            sender.RpcSetStatus("あなたはこのターンの行動を完了しています。相手を待ってください。");
+            sender.RpcSetStatus("You already ended this turn. Waiting for opponent...");
             return;
         }
 
@@ -256,10 +256,10 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
 
         if (!(endedThisRound[0] && endedThisRound[1]))
         {
-            SetStatusForPlayer(playerIndex, "行動完了。相手の行動を待っています...");
+            SetStatusForPlayer(playerIndex, "Action complete. Waiting for opponent...");
 
             int other = playerIndex == 0 ? 1 : 0;
-            SetStatusForPlayer(other, "相手が行動完了しました。あなたの行動を選択してください。");
+            SetStatusForPlayer(other, "Opponent finished. Choose your action.");
             return;
         }
 
@@ -267,8 +267,8 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
         endedThisRound[1] = false;
 
         RpcAdvanceTurnOnly();
-        SetStatusForPlayer(0, "両プレイヤーの行動が完了。次ターンへ進みます。");
-        SetStatusForPlayer(1, "両プレイヤーの行動が完了。次ターンへ進みます。");
+        SetStatusForPlayer(0, "Both actions complete. Next turn.");
+        SetStatusForPlayer(1, "Both actions complete. Next turn.");
     }
 
     [Server]
@@ -296,13 +296,13 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
         CardData card = MultiplayerCardCatalog.Find(cardId);
         if (card == null)
         {
-            MultiplayerRuntime.SetStatus("カード同期エラー: " + cardId);
+            MultiplayerRuntime.SetStatus("Card sync error: " + cardId);
             return;
         }
 
         if (CardPlacementController.Instance == null)
         {
-            MultiplayerRuntime.SetStatus("配置コントローラーが見つかりません");
+            MultiplayerRuntime.SetStatus("Placement controller not found");
             return;
         }
 
@@ -320,7 +320,7 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
     {
         if (!isReady) return;
         MultiplayerRuntime.MarkGameplayReady();
-        MultiplayerRuntime.SetStatus("接続完了: ゲーム開始");
+        MultiplayerRuntime.SetStatus("Connected. Match start");
     }
 
     private void OnPublicValueChanged(int _, int __)

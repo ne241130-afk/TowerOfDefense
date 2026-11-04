@@ -29,6 +29,7 @@ public class MultiplayerNetworkManager : NetworkManager
 
         maxConnections = 2;
         dontDestroyOnLoad = true;
+        autoCreatePlayer = false;
 
         base.Awake();
         Instance = this;
@@ -112,13 +113,27 @@ public class MultiplayerNetworkManager : NetworkManager
     public override void OnClientConnect()
     {
         base.OnClientConnect();
+
+        if (NetworkClient.isConnected)
+        {
+            if (!NetworkClient.ready)
+            {
+                NetworkClient.Ready();
+            }
+
+            if (NetworkClient.localPlayer == null)
+            {
+                NetworkClient.AddPlayer();
+            }
+        }
+
         MultiplayerRuntime.EnterMultiplayerSession();
-        MultiplayerRuntime.SetStatus("接続成功: 相手を待っています...");
+        MultiplayerRuntime.SetStatus("Connected. Waiting for opponent...");
     }
 
     public override void OnClientDisconnect()
     {
         base.OnClientDisconnect();
-        MultiplayerRuntime.LeaveMultiplayerSession("切断されました");
+        MultiplayerRuntime.LeaveMultiplayerSession("Disconnected");
     }
 }

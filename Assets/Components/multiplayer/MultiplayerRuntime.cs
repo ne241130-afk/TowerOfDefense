@@ -13,7 +13,7 @@ public static class MultiplayerRuntime
     {
         IsMultiplayerSession = true;
         IsGameplayReady = false;
-        StatusMessage = "接続中...";
+        StatusMessage = "Connecting...";
     }
 
     public static void LeaveMultiplayerSession(string message)

@@ -6,6 +6,8 @@ public class MultiplayerPlayerIdentity : NetworkBehaviour
     [SyncVar(hook = nameof(OnPlayerIndexChanged))]
     private int playerIndex = -1;
 
+    private int latestPlayerIndex = -1;
+
     public int PlayerIndex => playerIndex;
 
     [Server]
@@ -17,15 +19,32 @@ public class MultiplayerPlayerIdentity : NetworkBehaviour
     public override void OnStartAuthority()
     {
         base.OnStartAuthority();
-        MultiplayerRuntime.SetLocalPlayer(this, playerIndex);
+        latestPlayerIndex = playerIndex;
+        TryBindLocalPlayer();
+    }
+
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+        latestPlayerIndex = playerIndex;
+        TryBindLocalPlayer();
     }
 
     private void OnPlayerIndexChanged(int _, int newValue)
     {
-        if (isOwned)
-        {
-            MultiplayerRuntime.SetLocalPlayer(this, newValue);
-        }
+        latestPlayerIndex = newValue;
+        TryBindLocalPlayer();
+    }
+
+    private void TryBindLocalPlayer()
+    {
+        // Hookはサーバー側でも走るため、クライアント準備前には触らない。
+        if (!NetworkClient.active) return;
+        if (netIdentity == null) return;
+        if (!netIdentity.isClient) return;
+        if (!netIdentity.isOwned) return;
+
+        MultiplayerRuntime.SetLocalPlayer(this, latestPlayerIndex);
     }
 
     [Command]
@@ -43,14 +62,14 @@ public class MultiplayerPlayerIdentity : NetworkBehaviour
     [Mirror.ClientRpc]
     public void RpcApplyPrivateState(string handCsv, int money)
     {
-        if (!isOwned) return;
+        if (netIdentity == null || !netIdentity.isOwned) return;
         MultiplayerMatchCoordinator.ApplyLocalPrivateState(handCsv, money);
     }
 
     [Mirror.ClientRpc]
     public void RpcSetStatus(string message)
     {
-        if (!isOwned) return;
+        if (netIdentity == null || !netIdentity.isOwned) return;
         MultiplayerRuntime.SetStatus(message);
     }
 }

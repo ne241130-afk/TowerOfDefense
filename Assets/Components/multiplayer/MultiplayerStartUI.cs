@@ -134,7 +134,7 @@ public class MultiplayerStartUI : MonoBehaviour
         }
 
         panelRoot.SetActive(true);
-        MultiplayerRuntime.SetStatus("接続方法を選択してください");
+        MultiplayerRuntime.SetStatus("Select connection mode");
     }
 
     private void BuildPanel()
@@ -146,7 +146,7 @@ public class MultiplayerStartUI : MonoBehaviour
 
         if (targetCanvas == null)
         {
-            Debug.LogError("MultiplayerStartUI: Canvas が見つかりません。");
+            Debug.LogError("MultiplayerStartUI: Canvas not found.");
             return;
         }
 
@@ -162,7 +162,7 @@ public class MultiplayerStartUI : MonoBehaviour
         Image bg = panelRoot.GetComponent<Image>();
         bg.color = new Color(0f, 0f, 0f, 0.8f);
 
-        statusText = CreateLabel(panelRoot.transform, "StatusText", "未接続", new Vector2(0f, 120f), 24);
+        statusText = CreateLabel(panelRoot.transform, "StatusText", "Not Connected", new Vector2(0f, 120f), 24);
 
         addressInput = CreateInput(panelRoot.transform, "AddressInput", "127.0.0.1", new Vector2(0f, 40f));
 
@@ -170,7 +170,7 @@ public class MultiplayerStartUI : MonoBehaviour
         hostButton.onClick.AddListener(() =>
         {
             CancelAutoConnect();
-            MultiplayerRuntime.SetStatus("ホストを開始しています...");
+            MultiplayerRuntime.SetStatus("Starting host...");
             if (NetworkManager.singleton != null)
             {
                 NetworkManager.singleton.StartHost();
@@ -184,7 +184,7 @@ public class MultiplayerStartUI : MonoBehaviour
             if (NetworkManager.singleton != null)
             {
                 NetworkManager.singleton.networkAddress = addressInput != null ? addressInput.text : "127.0.0.1";
-                MultiplayerRuntime.SetStatus("クライアント接続中...");
+                MultiplayerRuntime.SetStatus("Connecting as client...");
                 NetworkManager.singleton.StartClient();
             }
         });
@@ -212,7 +212,7 @@ public class MultiplayerStartUI : MonoBehaviour
 
         if (!(NetworkManager.singleton is MultiplayerNetworkManager manager))
         {
-            MultiplayerRuntime.SetStatus("NetworkManagerの初期化に失敗しました");
+            MultiplayerRuntime.SetStatus("NetworkManager initialization failed");
             autoConnectRoutine = null;
             yield break;
         }
@@ -231,7 +231,7 @@ public class MultiplayerStartUI : MonoBehaviour
         CancelAutoConnect();
         autoConnectCts = new CancellationTokenSource();
 
-        MultiplayerRuntime.SetStatus("LAN内のホストを検索中...");
+        MultiplayerRuntime.SetStatus("Searching LAN host...");
 
         Task<string> discoverTask = discovery.DiscoverHostAsync(2.5f, autoConnectCts.Token);
         yield return new WaitUntil(() => discoverTask.IsCompleted);
@@ -250,13 +250,13 @@ public class MultiplayerStartUI : MonoBehaviour
             }
 
             manager.networkAddress = foundAddress;
-            MultiplayerRuntime.SetStatus("ホスト発見: " + foundAddress + " に接続中...");
+            MultiplayerRuntime.SetStatus("Host found: " + foundAddress + " connecting...");
             manager.StartClient();
         }
         else
         {
             float backoff = Random.Range(0.25f, 0.8f);
-            MultiplayerRuntime.SetStatus("ホスト未検出。再確認中...");
+            MultiplayerRuntime.SetStatus("No host found. Retrying...");
             yield return new WaitForSeconds(backoff);
 
             Task<string> retryTask = discovery.DiscoverHostAsync(1.2f, CancellationToken.None);
@@ -271,12 +271,12 @@ public class MultiplayerStartUI : MonoBehaviour
                 }
 
                 manager.networkAddress = retryAddress;
-                MultiplayerRuntime.SetStatus("ホスト発見: " + retryAddress + " に接続中...");
+                MultiplayerRuntime.SetStatus("Host found: " + retryAddress + " connecting...");
                 manager.StartClient();
             }
             else
             {
-                MultiplayerRuntime.SetStatus("ホスト未検出。自端末をホストとして起動します...");
+                MultiplayerRuntime.SetStatus("No host found. Starting host on this device...");
                 manager.StartHost();
             }
         }
@@ -343,7 +343,7 @@ public class MultiplayerStartUI : MonoBehaviour
         textComponent.alignment = TextAlignmentOptions.Left;
         textComponent.margin = new Vector4(16f, 0f, 0f, 0f);
 
-        TextMeshProUGUI placeholder = CreateLabel(root.transform, "Placeholder", "接続先IP", Vector2.zero, 24);
+        TextMeshProUGUI placeholder = CreateLabel(root.transform, "Placeholder", "Server IP", Vector2.zero, 24);
         placeholder.color = new Color(1f, 1f, 1f, 0.5f);
         placeholder.alignment = TextAlignmentOptions.Left;
         placeholder.margin = new Vector4(16f, 0f, 0f, 0f);
