@@ -6,6 +6,22 @@ public class StartMenuController : MonoBehaviour
     [Tooltip("Battle")]
     public string gameSceneName = "Battle";
 
+    [Tooltip("Multiplayer starter component (optional). If not set, it is auto-added at runtime.")]
+    public MultiplayerStartUI multiplayerStartUI;
+
+    private void Awake()
+    {
+        if (multiplayerStartUI == null)
+        {
+            multiplayerStartUI = GetComponent<MultiplayerStartUI>();
+        }
+
+        if (multiplayerStartUI == null)
+        {
+            multiplayerStartUI = gameObject.AddComponent<MultiplayerStartUI>();
+        }
+    }
+
     // Startボタンにアタッチ
     public void OnStartButton()
     {
@@ -20,6 +36,21 @@ public class StartMenuController : MonoBehaviour
         }
 
         SceneManager.LoadScene(gameSceneName);
+    }
+
+    public void OnMultiplayerButton()
+    {
+        if (multiplayerStartUI == null)
+        {
+            multiplayerStartUI = GetComponent<MultiplayerStartUI>();
+        }
+
+        if (multiplayerStartUI == null)
+        {
+            multiplayerStartUI = gameObject.AddComponent<MultiplayerStartUI>();
+        }
+
+        multiplayerStartUI.SendMessage("OnMultiplayerButtonClicked", SendMessageOptions.DontRequireReceiver);
     }
 
     // 終了ボタン（ビルド時のみ有効）

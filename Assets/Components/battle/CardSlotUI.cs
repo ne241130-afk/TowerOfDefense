@@ -74,6 +74,12 @@ public class CardSlotUI : MonoBehaviour
     /// </summary>
     public void OnClickCard()
     {
+        if (MultiplayerRuntime.IsMultiplayerSession && !MultiplayerRuntime.IsPointerInsideOwnHalf())
+        {
+            MultiplayerRuntime.SetStatus("自分の操作エリアのみカードを選択できます");
+            return;
+        }
+
         if (CardPlacementController.Instance != null)
         {
             CardPlacementController.Instance.SelectCard(cardData, this);

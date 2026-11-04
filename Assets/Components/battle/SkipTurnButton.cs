@@ -12,6 +12,22 @@ public class SkipTurnButton : UnityEngine.MonoBehaviour
     /// </summary>
     public void OnClick()
     {
+        if (MultiplayerRuntime.IsMultiplayerSession)
+        {
+            if (!MultiplayerRuntime.IsGameplayReady)
+            {
+                MultiplayerRuntime.SetStatus("接続完了まで待機してください");
+                return;
+            }
+
+            MultiplayerPlayerIdentity identity = MultiplayerRuntime.LocalPlayerIdentity;
+            if (identity != null)
+            {
+                identity.CmdRequestSkipTurn();
+            }
+            return;
+        }
+
         TurnManager.Instance?.AdvanceTurn();
     }
 }

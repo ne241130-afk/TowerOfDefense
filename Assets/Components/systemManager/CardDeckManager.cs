@@ -40,8 +40,16 @@ public class CardDeckManager : MonoBehaviour
     // ゲーム開始時の山札を保存
     private List<CardData> initialDeck = new List<CardData>();
 
+    private bool networkControlledMode;
+
     private void Start()
     {
+        if (networkControlledMode)
+        {
+            UpdateHandUI();
+            return;
+        }
+
         // 手札を引く前の山札を保存
         initialDeck = new List<CardData>(deck);
 
@@ -67,6 +75,7 @@ public class CardDeckManager : MonoBehaviour
     /// </summary>
     private void OnWaveCompleted(int completedWave)
     {
+        if (networkControlledMode) return;
         if (EconomyManager.Instance == null) return;
 
         int manekinNekoCount = 0;
@@ -132,6 +141,7 @@ public class CardDeckManager : MonoBehaviour
     /// </summary>
     public void UseCard(CardData card)
     {
+        if (networkControlledMode) return;
         if (card == null) return;
 
         // 手札からカードを削除
@@ -154,6 +164,7 @@ public class CardDeckManager : MonoBehaviour
     /// </summary>
     public void ReloadHand()
     {
+        if (networkControlledMode) return;
         // ターン管理の確認
         if (TurnManager.Instance == null)
         {
@@ -229,6 +240,7 @@ public class CardDeckManager : MonoBehaviour
     /// </summary>
     public void ResetDeckAndHand()
     {
+        if (networkControlledMode) return;
         // 手札を空にする
         hand.Clear();
 
@@ -246,5 +258,29 @@ public class CardDeckManager : MonoBehaviour
         UpdateHandUI();
 
         Debug.Log("5 wave経過：山札と手札を初期状態に戻しました。");
+    }
+
+    public void EnableNetworkControlledMode()
+    {
+        networkControlledMode = true;
+    }
+
+    public void SetHandFromNetwork(List<CardData> newHand)
+    {
+        networkControlledMode = true;
+        hand.Clear();
+
+        if (newHand != null)
+        {
+            hand.AddRange(newHand);
+        }
+
+        UpdateHandUI();
+    }
+
+    public int FindHandIndex(CardData card)
+    {
+        if (card == null) return -1;
+        return hand.FindIndex(c => c == card);
     }
 }

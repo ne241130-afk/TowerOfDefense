@@ -6,6 +6,22 @@ public class TurnButtonController : MonoBehaviour
     {
         Debug.Log("ターンボタンが押されました");
 
+        if (MultiplayerRuntime.IsMultiplayerSession)
+        {
+            if (!MultiplayerRuntime.IsGameplayReady)
+            {
+                MultiplayerRuntime.SetStatus("接続完了まで待機してください");
+                return;
+            }
+
+            MultiplayerPlayerIdentity identity = MultiplayerRuntime.LocalPlayerIdentity;
+            if (identity != null)
+            {
+                identity.CmdRequestSkipTurn();
+            }
+            return;
+        }
+
         if (TurnManager.Instance != null)
         {
             TurnManager.Instance.AdvanceTurn();

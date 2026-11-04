@@ -36,6 +36,10 @@ public class CardPlacementController : MonoBehaviour
     /// <summary>highlightPrefab未設定時に使うフォールバック用スプライト(起動時に1x1テクスチャから生成)。</summary>
     private Sprite fallbackHighlightSprite;
 
+    private bool suppressEconomyAndConsume;
+    private bool suppressTurnAdvance;
+    private bool suppressSelectionClear;
+
     public bool HasSelection => selectedCard != null;
 
     private void Awake()
@@ -88,6 +92,12 @@ public class CardPlacementController : MonoBehaviour
         if (selectedCard == null) return;
         if (FieldGridConfig.Instance == null || FieldGridConfig.Instance.grid == null) return;
 
+        if (MultiplayerRuntime.IsMultiplayerSession && !MultiplayerRuntime.IsPointerInsideOwnHalf())
+        {
+            HideHighlights();
+            return;
+        }
+
         if (targetCamera == null) targetCamera = Camera.main;
         if (targetCamera == null) return;
 
@@ -104,7 +114,69 @@ public class CardPlacementController : MonoBehaviour
         // カードUIなどのUI要素上のクリックは配置確定として扱わない
         if (Input.GetMouseButtonDown(0) && !IsPointerOverUI())
         {
+            if (MultiplayerRuntime.IsMultiplayerSession)
+            {
+                if (!MultiplayerRuntime.IsGameplayReady)
+                {
+                    MultiplayerRuntime.SetStatus("接続完了まで待機してください");
+                    return;
+                }
+
+                if (!MultiplayerRuntime.IsPointerInsideOwnHalf())
+                {
+                    MultiplayerRuntime.SetStatus("自分の操作エリアのみ配置できます");
+                    return;
+                }
+
+                MultiplayerPlayerIdentity identity = MultiplayerRuntime.LocalPlayerIdentity;
+                if (identity == null)
+                {
+                    MultiplayerRuntime.SetStatus("プレイヤー情報の同期中です");
+                    return;
+                }
+
+                string cardId = MultiplayerCardCatalog.GetCardId(selectedCard);
+                if (string.IsNullOrEmpty(cardId))
+                {
+                    MultiplayerRuntime.SetStatus("カードID取得に失敗しました");
+                    return;
+                }
+
+                identity.CmdRequestPlaceCard(cardId, hoverCell.x, hoverCell.y, hoverCell.z);
+                return;
+            }
+
             TryPlaceAt(hoverCell);
+        }
+    }
+
+    public void ApplyPlacementFromNetwork(CardData card, Vector3Int center, bool clearLocalSelection = false)
+    {
+        if (card == null) return;
+
+        CardData prevCard = selectedCard;
+        CardSlotUI prevSlot = selectedSlot;
+        bool prevSuppressEconomy = suppressEconomyAndConsume;
+        bool prevSuppressTurn = suppressTurnAdvance;
+        bool prevSuppressClear = suppressSelectionClear;
+
+        selectedCard = card;
+        selectedSlot = null;
+        suppressEconomyAndConsume = true;
+        suppressTurnAdvance = true;
+        suppressSelectionClear = !clearLocalSelection;
+
+        TryPlaceAt(center);
+
+        suppressEconomyAndConsume = prevSuppressEconomy;
+        suppressTurnAdvance = prevSuppressTurn;
+        suppressSelectionClear = prevSuppressClear;
+
+        if (!clearLocalSelection)
+        {
+            selectedCard = prevCard;
+            selectedSlot = prevSlot;
+            lastHoverCell = null;
         }
     }
 
@@ -233,19 +305,14 @@ public class CardPlacementController : MonoBehaviour
 
     private void TryPlaceAt(Vector3Int center)
     {
+        if (selectedCard == null) return;
+
         WallBlockMap.EnsureExists(FieldGridConfig.Instance != null ? FieldGridConfig.Instance.transform : null);
 
         // 招き猫はフィールド設置不要。どこかがクリックされた時点で即時発動する
         if (selectedCard.effectType == CardEffectType.ManekinNeko)
         {
-            if (EconomyManager.Instance != null && selectedCard.cost > 0)
-            {
-                if (!EconomyManager.Instance.TrySpend(selectedCard.cost))
-                {
-                    Debug.Log($"{selectedCard.cardName}: 所持金不足（必要: {selectedCard.cost}、所持: {EconomyManager.Instance.CurrentMoney}）");
-                    return;
-                }
-            }
+            if (!TrySpendCardCostIfNeeded()) return;
             UseManekinNeko();
             return;
         }
@@ -273,14 +340,7 @@ public class CardPlacementController : MonoBehaviour
         }
 
         // コスト確認・消費(所持金不足なら配置キャンセル)
-        if (EconomyManager.Instance != null && selectedCard.cost > 0)
-        {
-            if (!EconomyManager.Instance.TrySpend(selectedCard.cost))
-            {
-                Debug.Log($"{selectedCard.cardName}: 所持金不足（必要: {selectedCard.cost}、所持: {EconomyManager.Instance.CurrentMoney}）");
-                return;
-            }
-        }
+        if (!TrySpendCardCostIfNeeded()) return;
 
         // ハンター召喚カードはIFieldEffectを使わず、プレハブを直接1体配置する
         if (selectedCard.effectType == CardEffectType.SummonHunter)
@@ -360,13 +420,9 @@ public class CardPlacementController : MonoBehaviour
                 }
             }
 
-            selectedSlot.ConsumeCard();
-            ClearSelection();
-
-            if (TurnManager.Instance != null)
-            {
-                TurnManager.Instance.AdvanceTurn();
-            }
+            ConsumeSelectedCardIfNeeded();
+            ClearSelectionIfNeeded();
+            AdvanceTurnIfNeeded();
 
             return;
         }
@@ -399,16 +455,47 @@ public class CardPlacementController : MonoBehaviour
         }
 
         // カードを使用
-        selectedSlot.ConsumeCard();
+        ConsumeSelectedCardIfNeeded();
 
         // カード選択を解除
-        ClearSelection();
+        ClearSelectionIfNeeded();
 
         // カードを使用したので1ターン進める
-        if (TurnManager.Instance != null)
+        AdvanceTurnIfNeeded();
+    }
+
+    private bool TrySpendCardCostIfNeeded()
+    {
+        if (suppressEconomyAndConsume) return true;
+
+        if (EconomyManager.Instance != null && selectedCard.cost > 0)
         {
-            TurnManager.Instance.AdvanceTurn();
+            if (!EconomyManager.Instance.TrySpend(selectedCard.cost))
+            {
+                Debug.Log($"{selectedCard.cardName}: 所持金不足（必要: {selectedCard.cost}、所持: {EconomyManager.Instance.CurrentMoney}）");
+                return false;
+            }
         }
+
+        return true;
+    }
+
+    private void ConsumeSelectedCardIfNeeded()
+    {
+        if (suppressEconomyAndConsume) return;
+        selectedSlot?.ConsumeCard();
+    }
+
+    private void ClearSelectionIfNeeded()
+    {
+        if (suppressSelectionClear) return;
+        ClearSelection();
+    }
+
+    private void AdvanceTurnIfNeeded()
+    {
+        if (suppressTurnAdvance) return;
+        TurnManager.Instance?.AdvanceTurn();
     }
 
     private bool CanPlaceWallAt(Vector3Int center, out string reason)
@@ -463,11 +550,11 @@ public class CardPlacementController : MonoBehaviour
             RegisterPlacedBoardObject(placedVisual);
         }
 
-        selectedSlot.ConsumeCard();
-        ClearSelection();
+        ConsumeSelectedCardIfNeeded();
+        ClearSelectionIfNeeded();
 
         // カードを使用したので1ターン進める
-        TurnManager.Instance?.AdvanceTurn();
+        AdvanceTurnIfNeeded();
     }
 
     /// <summary>
@@ -500,9 +587,9 @@ public class CardPlacementController : MonoBehaviour
         var placedVisual = Instantiate(visualPrefab, worldPos, Quaternion.identity);
         RegisterPlacedBoardObject(placedVisual);
 
-        selectedSlot.ConsumeCard();
-        ClearSelection();
-        TurnManager.Instance?.AdvanceTurn();
+        ConsumeSelectedCardIfNeeded();
+        ClearSelectionIfNeeded();
+        AdvanceTurnIfNeeded();
     }
 
     private void PlaceFluit(Vector3Int cell)
@@ -531,9 +618,9 @@ public class CardPlacementController : MonoBehaviour
         var placedVisual = Instantiate(visualPrefab, worldPos, Quaternion.identity);
         RegisterPlacedBoardObject(placedVisual);
 
-        selectedSlot.ConsumeCard();
-        ClearSelection();
-        TurnManager.Instance?.AdvanceTurn();
+        ConsumeSelectedCardIfNeeded();
+        ClearSelectionIfNeeded();
+        AdvanceTurnIfNeeded();
     }
 
     private void PlaceWall(Vector3Int cell)
@@ -560,9 +647,9 @@ public class CardPlacementController : MonoBehaviour
             RegisterPlacedBoardObject(placedVisual);
         }
 
-        selectedSlot.ConsumeCard();
-        ClearSelection();
-        TurnManager.Instance?.AdvanceTurn();
+        ConsumeSelectedCardIfNeeded();
+        ClearSelectionIfNeeded();
+        AdvanceTurnIfNeeded();
     }
 
     /// <summary>
@@ -612,9 +699,9 @@ public class CardPlacementController : MonoBehaviour
             RegisterPlacedBoardObject(placedVisual);
         }
 
-        selectedSlot.ConsumeCard();
-        ClearSelection();
-        TurnManager.Instance?.AdvanceTurn();
+        ConsumeSelectedCardIfNeeded();
+        ClearSelectionIfNeeded();
+        AdvanceTurnIfNeeded();
     }
 
     /// <summary>
@@ -624,14 +711,14 @@ public class CardPlacementController : MonoBehaviour
     /// </summary>
     private void UseManekinNeko()
     {
-        if (selectedCard.bonusAmount > 0 && EconomyManager.Instance != null)
+        if (!suppressEconomyAndConsume && selectedCard.bonusAmount > 0 && EconomyManager.Instance != null)
         {
             EconomyManager.Instance.AddMoney(selectedCard.bonusAmount);
             Debug.Log($"[招き猫] {selectedCard.bonusAmount} 円獲得！ 現在の所持金: {EconomyManager.Instance.CurrentMoney}");
         }
 
-        selectedSlot.ConsumeCard();
-        ClearSelection();
-        TurnManager.Instance?.AdvanceTurn();
+        ConsumeSelectedCardIfNeeded();
+        ClearSelectionIfNeeded();
+        AdvanceTurnIfNeeded();
     }
 }
