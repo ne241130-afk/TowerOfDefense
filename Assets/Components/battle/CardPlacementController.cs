@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Mirror;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -111,42 +112,151 @@ public class CardPlacementController : MonoBehaviour
             lastHoverCell = hoverCell;
         }
 
-        // カードUIなどのUI要素上のクリックは配置確定として扱わない
-        if (Input.GetMouseButtonDown(0) && !IsPointerOverUI())
+        if (Input.GetMouseButtonDown(0))
         {
-            if (MultiplayerRuntime.IsMultiplayerSession)
+            bool overUi = IsPointerOverUI();
+            Debug.Log($"[TRACE][Placement] MouseDown overUI={overUi}");
+
+            // シングル時は従来どおりUI上クリックを無視する。
+            if (!MultiplayerRuntime.IsMultiplayerSession && overUi)
             {
-                if (!MultiplayerRuntime.IsGameplayReady)
+                return;
+            }
+
+            Debug.Log($"[TRACE][Placement] Field click detected cell=({hoverCell.x},{hoverCell.y},{hoverCell.z}) selected={selectedCard.cardName}");
+
+            bool networkActive = NetworkClient.active || NetworkServer.active;
+            bool treatAsMultiplayer = MultiplayerRuntime.IsMultiplayerSession || networkActive;
+            Debug.Log($"[TRACE][Placement] session={MultiplayerRuntime.IsMultiplayerSession} networkActive={networkActive} treatAsMultiplayer={treatAsMultiplayer}");
+
+            if (treatAsMultiplayer)
+            {
+                if (!MultiplayerRuntime.IsMultiplayerSession)
                 {
-                    MultiplayerRuntime.SetStatus("接続完了まで待機してください");
-                    return;
+                    MultiplayerRuntime.EnterMultiplayerSession();
+                    Debug.Log("[TRACE][Placement] Runtime session recovered from network active state.");
                 }
 
                 if (!MultiplayerRuntime.IsPointerInsideOwnHalf())
                 {
-                    MultiplayerRuntime.SetStatus("自分の操作エリアのみ配置できます");
-                    return;
-                }
-
-                MultiplayerPlayerIdentity identity = MultiplayerRuntime.LocalPlayerIdentity;
-                if (identity == null)
-                {
-                    MultiplayerRuntime.SetStatus("プレイヤー情報の同期中です");
+                    MultiplayerRuntime.SetStatus("TRACE: blocked by own-half check on placement");
+                    Debug.Log("[TRACE][Placement] Blocked by own-half check.");
                     return;
                 }
 
                 string cardId = MultiplayerCardCatalog.GetCardId(selectedCard);
+                Debug.Log($"[TRACE][Placement] selectedCard name={selectedCard.cardName} generatedCardId={cardId}");
                 if (string.IsNullOrEmpty(cardId))
                 {
-                    MultiplayerRuntime.SetStatus("カードID取得に失敗しました");
+                    MultiplayerRuntime.SetStatus("TRACE: blocked, card id is empty");
+                    Debug.LogError("[TRACE][Placement] Card ID is empty.");
                     return;
                 }
 
-                identity.CmdRequestPlaceCard(cardId, hoverCell.x, hoverCell.y, hoverCell.z);
+                Vector3Int cell = new Vector3Int(hoverCell.x, hoverCell.y, hoverCell.z);
+                int handIndex = -1;
+                if (CardDeckManager.Instance != null)
+                {
+                    handIndex = CardDeckManager.Instance.FindSlotIndex(selectedSlot);
+                    if (handIndex < 0)
+                    {
+                        handIndex = CardDeckManager.Instance.FindHandIndex(selectedCard);
+                    }
+                }
+                Debug.Log($"[TRACE][Placement] Attempting PlaceCardRequestMessage cardId={cardId} handIndex={handIndex} cell=({cell.x},{cell.y},{cell.z})");
+                if (!MultiplayerActionClient.TrySendPlaceCard(cardId, handIndex, cell, out string sendReason))
+                {
+                    MultiplayerRuntime.SetStatus("TRACE: place send failed, " + sendReason);
+                    Debug.LogWarning("[TRACE][Placement] place send failed: " + sendReason);
+                    return;
+                }
+
+                MultiplayerRuntime.SetStatus("TRACE: sent PlaceCardRequestMessage");
+                Debug.Log($"[TRACE][Placement] Sent PlaceCardRequestMessage cardId={cardId} playerIndex={MultiplayerRuntime.LocalPlayerIndex}");
                 return;
             }
 
             TryPlaceAt(hoverCell);
+        }
+    }
+
+    private MultiplayerPlayerIdentity TryResolveLocalIdentityFromNetworkClient()
+    {
+        try
+        {
+            if (!NetworkClient.active) return null;
+
+            MultiplayerPlayerIdentity resolved = null;
+
+            try
+            {
+                NetworkIdentity local = NetworkClient.localPlayer;
+                if (local != null)
+                {
+                    resolved = local.GetComponent<MultiplayerPlayerIdentity>();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning("[TRACE][Placement] localPlayer access failed: " + ex.Message);
+            }
+
+            if (resolved == null)
+            {
+                try
+                {
+                    NetworkConnection conn = NetworkClient.connection;
+                    NetworkIdentity connIdentity = conn != null ? conn.identity : null;
+                    if (connIdentity != null)
+                    {
+                        resolved = connIdentity.GetComponent<MultiplayerPlayerIdentity>();
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogWarning("[TRACE][Placement] connection.identity access failed: " + ex.Message);
+                }
+            }
+
+            if (IsResolvedIdentityUsable(resolved))
+            {
+                MultiplayerRuntime.SetLocalPlayer(resolved, resolved.PlayerIndex);
+                Debug.Log($"[TRACE][Placement] Resolved LocalPlayerIdentity via fallback. playerIndex={resolved.PlayerIndex}");
+                return resolved;
+            }
+
+            MultiplayerPlayerIdentity[] all = FindObjectsByType<MultiplayerPlayerIdentity>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            foreach (MultiplayerPlayerIdentity candidate in all)
+            {
+                if (candidate == null) continue;
+
+                if (!IsResolvedIdentityUsable(candidate)) continue;
+
+                MultiplayerRuntime.SetLocalPlayer(candidate, candidate.PlayerIndex);
+                Debug.Log($"[TRACE][Placement] Resolved LocalPlayerIdentity via scene search. playerIndex={candidate.PlayerIndex}");
+                return candidate;
+            }
+
+            return null;
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning("[TRACE][Placement] TryResolveLocalIdentityFromNetworkClient failed: " + ex);
+            return null;
+        }
+    }
+
+    private static bool IsResolvedIdentityUsable(MultiplayerPlayerIdentity identity)
+    {
+        if (identity == null) return false;
+
+        try
+        {
+            return identity.netId != 0;
+        }
+        catch
+        {
+            return false;
         }
     }
 

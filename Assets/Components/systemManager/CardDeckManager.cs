@@ -1,5 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
+using UnityEngine.UI;
+using Mirror;
 
 /// <summary>
 /// カードの山札を管理するシステム
@@ -41,6 +44,12 @@ public class CardDeckManager : MonoBehaviour
     private List<CardData> initialDeck = new List<CardData>();
 
     private bool networkControlledMode;
+    private bool resolvedLocalSideSlots;
+    private int lastRenderedPlayerIndex = -99;
+    private readonly List<CardSlotUI> leftSideSlots = new List<CardSlotUI>();
+    private readonly List<CardSlotUI> rightSideSlots = new List<CardSlotUI>();
+    private List<CardData> latestHostHand = new List<CardData>();
+    private List<CardData> latestGuestHand = new List<CardData>();
 
     private void Start()
     {
@@ -67,6 +76,24 @@ public class CardDeckManager : MonoBehaviour
     {
         if (WaveManager.Instance != null)
             WaveManager.Instance.OnWaveCompleted.RemoveListener(OnWaveCompleted);
+    }
+
+    private void Update()
+    {
+        if (!MultiplayerRuntime.IsMultiplayerSession) return;
+        if (!networkControlledMode) return;
+
+        if (!resolvedLocalSideSlots)
+        {
+            ResolveSlotsForLocalPlayerSide();
+        }
+
+        int currentPlayerIndex = MultiplayerRuntime.LocalPlayerIndex;
+        if (currentPlayerIndex != lastRenderedPlayerIndex)
+        {
+            lastRenderedPlayerIndex = currentPlayerIndex;
+            RenderMultiplayerHands();
+        }
     }
 
     /// <summary>
@@ -268,19 +295,176 @@ public class CardDeckManager : MonoBehaviour
     public void SetHandFromNetwork(List<CardData> newHand)
     {
         networkControlledMode = true;
-        hand.Clear();
 
-        if (newHand != null)
+        ResolveSlotsForLocalPlayerSide();
+        int localIndex = GetEffectiveLocalPlayerIndex();
+
+        List<CardData> source = newHand ?? new List<CardData>();
+
+        if (localIndex == 0)
         {
-            hand.AddRange(newHand);
+            latestHostHand = new List<CardData>(source);
+        }
+        else if (localIndex == 1)
+        {
+            latestGuestHand = new List<CardData>(source);
         }
 
-        UpdateHandUI();
+        hand.Clear();
+        hand.AddRange(source);
+
+        RenderMultiplayerHands();
+    }
+
+    public void SetBothHandsFromNetwork(List<CardData> hostHand, List<CardData> guestHand)
+    {
+        networkControlledMode = true;
+        ResolveSlotsForLocalPlayerSide();
+        int localIndex = GetEffectiveLocalPlayerIndex();
+
+        latestHostHand = hostHand != null ? new List<CardData>(hostHand) : new List<CardData>();
+        latestGuestHand = guestHand != null ? new List<CardData>(guestHand) : new List<CardData>();
+
+        hand.Clear();
+        if (localIndex == 0)
+        {
+            hand.AddRange(latestHostHand);
+        }
+        else if (localIndex == 1)
+        {
+            hand.AddRange(latestGuestHand);
+        }
+
+        RenderMultiplayerHands();
+    }
+
+    private void ResolveSlotsForLocalPlayerSide()
+    {
+        if (resolvedLocalSideSlots) return;
+        if (!MultiplayerRuntime.IsMultiplayerSession) return;
+
+        CardSlotUI[] all = FindObjectsByType<CardSlotUI>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        if (all == null || all.Length == 0) return;
+
+        List<(CardSlotUI slot, float x)> left = new List<(CardSlotUI slot, float x)>();
+        List<(CardSlotUI slot, float x)> right = new List<(CardSlotUI slot, float x)>();
+
+        foreach (CardSlotUI slot in all)
+        {
+            if (slot == null) continue;
+
+            RectTransform rt = slot.GetComponent<RectTransform>();
+            if (rt == null) continue;
+
+            float x = rt.anchoredPosition.x;
+            if (Mathf.Abs(x) < 0.001f)
+            {
+                x = rt.position.x;
+            }
+
+            if (x < 0f)
+            {
+                left.Add((slot, x));
+            }
+            else
+            {
+                right.Add((slot, x));
+            }
+        }
+
+        if (left.Count == 0 || right.Count == 0) return;
+
+        left.Sort((a, b) => a.x.CompareTo(b.x));
+        right.Sort((a, b) => a.x.CompareTo(b.x));
+
+        leftSideSlots.Clear();
+        rightSideSlots.Clear();
+
+        foreach (var p in left)
+        {
+            leftSideSlots.Add(p.slot);
+        }
+
+        foreach (var p in right)
+        {
+            rightSideSlots.Add(p.slot);
+        }
+
+        // Host(Player0)=RIGHT, Guest(Player1)=LEFT
+        int localIndex = GetEffectiveLocalPlayerIndex();
+        cardSlots = localIndex == 0 ? rightSideSlots : leftSideSlots;
+
+        resolvedLocalSideSlots = true;
+    }
+
+    private void RenderMultiplayerHands()
+    {
+        if (!MultiplayerRuntime.IsMultiplayerSession || !resolvedLocalSideSlots)
+        {
+            return;
+        }
+
+        int localIndex = GetEffectiveLocalPlayerIndex();
+
+        ApplyHandToSlots(rightSideSlots, latestHostHand, localIndex == 0);
+        ApplyHandToSlots(leftSideSlots, latestGuestHand, localIndex == 1);
+    }
+
+    private static int GetEffectiveLocalPlayerIndex()
+    {
+        if (MultiplayerRuntime.LocalPlayerIndex == 0 || MultiplayerRuntime.LocalPlayerIndex == 1)
+        {
+            return MultiplayerRuntime.LocalPlayerIndex;
+        }
+
+        // Fallback when SyncVar index hasn't arrived yet.
+        if (NetworkServer.active && NetworkClient.active)
+        {
+            return 0; // host
+        }
+
+        if (NetworkClient.active)
+        {
+            return 1; // guest
+        }
+
+        return -1;
+    }
+
+    private static void ApplyHandToSlots(List<CardSlotUI> slots, List<CardData> cards, bool interactable)
+    {
+        if (slots == null) return;
+
+        for (int i = 0; i < slots.Count; i++)
+        {
+            CardSlotUI slot = slots[i];
+            if (slot == null) continue;
+
+            bool hasCard = cards != null && i < cards.Count && cards[i] != null;
+            slot.gameObject.SetActive(hasCard);
+
+            if (hasCard)
+            {
+                slot.SetCard(cards[i]);
+            }
+
+            Button button = slot.GetComponent<Button>();
+            if (button != null)
+            {
+                button.interactable = interactable && hasCard;
+            }
+        }
     }
 
     public int FindHandIndex(CardData card)
     {
         if (card == null) return -1;
         return hand.FindIndex(c => c == card);
+    }
+
+    public int FindSlotIndex(CardSlotUI slot)
+    {
+        if (slot == null) return -1;
+        return cardSlots.IndexOf(slot);
     }
 }

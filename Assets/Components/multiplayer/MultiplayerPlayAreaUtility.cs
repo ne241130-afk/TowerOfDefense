@@ -29,9 +29,11 @@ public static class MultiplayerPlayAreaUtility
 
         if (playerIndex == 0)
         {
-            return cell.x < split;
+            // Host(Player0) controls RIGHT side.
+            return cell.x >= split;
         }
 
-        return cell.x >= split;
+        // Guest(Player1) controls LEFT side.
+        return cell.x < split;
     }
 }

@@ -2761,12 +2761,12 @@ MonoBehaviour:
     turnInWave: 1
     animalPrefab: {fileID: 2599670119332685034, guid: 5184a845c33e74a73b5544f12e8a01f3, type: 3}
     useDefaultSpawnCell: 0
-    spawnCell: {x: -4, y: -2, z: 0}
+    spawnCell: {x: -11, y: -2, z: 0}
   - wave: 1
     turnInWave: 1
     animalPrefab: {fileID: 8761484550491967488, guid: 6313c850cc4d54d9f961b5b4d6f6073a, type: 3}
     useDefaultSpawnCell: 0
-    spawnCell: {x: 4, y: -2, z: 0}
+    spawnCell: {x: 0, y: -2, z: 0}
   randomGroups:
   - wave: 0
     waveEnd: 0
@@ -7481,6 +7481,16 @@ Tilemap:
       serializedVersion: 2
       m_TileIndex: 4
       m_TileSpriteIndex: 8
+      m_TileMatrixIndex: 0
+      m_TileColorIndex: 0
+      m_TileObjectToInstantiateIndex: 65535
+      dummyAlignment: 0
+      m_AllTileFlags: 1073741825
+  - first: {x: -5, y: -6, z: 0}
+    second:
+      serializedVersion: 2
+      m_TileIndex: 3
+      m_TileSpriteIndex: 9
       m_TileMatrixIndex: 0
       m_TileColorIndex: 0
       m_TileObjectToInstantiateIndex: 65535
@@ -19144,8 +19154,8 @@ Tilemap:
     m_Data: {fileID: 0}
   - m_RefCount: 0
     m_Data: {fileID: 0}
-  - m_RefCount: 0
-    m_Data: {fileID: 0}
+  - m_RefCount: 1
+    m_Data: {fileID: 11400000, guid: 360ae00d935a841dcbb244c4ad15260e, type: 2}
   - m_RefCount: 106
     m_Data: {fileID: 11400000, guid: a925797f4695e44d48f4c29bf896406b, type: 2}
   - m_RefCount: 1
@@ -19185,7 +19195,7 @@ Tilemap:
     m_Data: {fileID: 0}
   - m_RefCount: 106
     m_Data: {fileID: 1256868390, guid: 68becc0263b574525be3459dc6b15ceb, type: 3}
-  - m_RefCount: 1
+  - m_RefCount: 2
     m_Data: {fileID: 1059749745, guid: e45b4d31eb0d548ab91183ab44e84141, type: 3}
   - m_RefCount: 18
     m_Data: {fileID: -613674131, guid: ea1a89b76a08a4ec4bd020bb21685614, type: 3}
@@ -19196,7 +19206,7 @@ Tilemap:
   - m_RefCount: 1
     m_Data: {fileID: -805260648, guid: e45b4d31eb0d548ab91183ab44e84141, type: 3}
   m_TileMatrixArray:
-  - m_RefCount: 1561
+  - m_RefCount: 1562
     m_Data:
       e00: 1
       e01: 0
@@ -19215,7 +19225,7 @@ Tilemap:
       e32: 0
       e33: 1
   m_TileColorArray:
-  - m_RefCount: 284
+  - m_RefCount: 285
     m_Data: {r: 1, g: 1, b: 1, a: 1}
   - m_RefCount: 0
     m_Data: {r: 0.7851655, g: 0.54518384, b: 0.5570873, a: 1}

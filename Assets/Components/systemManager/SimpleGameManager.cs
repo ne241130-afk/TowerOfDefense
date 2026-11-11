@@ -66,11 +66,23 @@ public class SimpleGameManager : MonoBehaviour
 
     public void GameOver()
     {
+        if (MultiplayerRuntime.IsMultiplayerSession && MultiplayerNetworkManager.Instance != null)
+        {
+            MultiplayerNetworkManager.Instance.RequestGameOverFromLocal();
+            return;
+        }
+
         SceneManager.LoadScene(gameOverSceneName);
     }
 
     public void GameClear()
     {
+        if (MultiplayerRuntime.IsMultiplayerSession && MultiplayerNetworkManager.Instance != null)
+        {
+            MultiplayerNetworkManager.Instance.RequestGameClearFromLocal();
+            return;
+        }
+
         UnityEngine.SceneManagement.SceneManager.LoadScene("GameClearScene");
     }
 

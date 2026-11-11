@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using Mirror;
 
 /// <summary>
 /// 手札の1枚のカードを表すUIコンポーネント。
@@ -74,15 +75,44 @@ public class CardSlotUI : MonoBehaviour
     /// </summary>
     public void OnClickCard()
     {
-        if (MultiplayerRuntime.IsMultiplayerSession && !MultiplayerRuntime.IsPointerInsideOwnHalf())
+        if (cardData == null)
         {
-            MultiplayerRuntime.SetStatus("自分の操作エリアのみカードを選択できます");
+            MultiplayerRuntime.SetStatus("TRACE: slot click ignored (cardData is null)");
+            Debug.LogWarning("[TRACE][CardSlotUI] Click ignored because cardData is null.");
             return;
+        }
+
+        Debug.Log($"[TRACE][CardSlotUI] Click card={cardData.cardName} localPlayerIndex={MultiplayerRuntime.LocalPlayerIndex}");
+
+        bool networkActive = NetworkClient.active || NetworkServer.active;
+        bool treatAsMultiplayer = MultiplayerRuntime.IsMultiplayerSession || networkActive;
+        if (treatAsMultiplayer && !MultiplayerRuntime.IsPointerInsideOwnHalf())
+        {
+            MultiplayerRuntime.SetStatus("TRACE: blocked by own-half check on card click");
+            Debug.Log("[TRACE][CardSlotUI] Blocked by own-half check.");
+            return;
+        }
+
+        if (treatAsMultiplayer)
+        {
+            if (!MultiplayerRuntime.IsMultiplayerSession)
+            {
+                MultiplayerRuntime.EnterMultiplayerSession();
+                Debug.Log("[TRACE][CardSlotUI] Runtime session recovered from network active state.");
+            }
+
+            MultiplayerRuntime.SetStatus("TRACE: card selected, waiting for field click");
         }
 
         if (CardPlacementController.Instance != null)
         {
             CardPlacementController.Instance.SelectCard(cardData, this);
+            Debug.Log("[TRACE][CardSlotUI] SelectCard called.");
+        }
+        else
+        {
+            MultiplayerRuntime.SetStatus("TRACE: CardPlacementController not found");
+            Debug.LogError("[TRACE][CardSlotUI] CardPlacementController.Instance is null.");
         }
 
         if (CardDescriptionUI.Instance != null)

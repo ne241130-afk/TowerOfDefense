@@ -14,16 +14,13 @@ public class SkipTurnButton : UnityEngine.MonoBehaviour
     {
         if (MultiplayerRuntime.IsMultiplayerSession)
         {
-            if (!MultiplayerRuntime.IsGameplayReady)
+            if (!MultiplayerActionClient.TrySendSkipTurn(out string reason))
             {
-                MultiplayerRuntime.SetStatus("接続完了まで待機してください");
-                return;
+                MultiplayerRuntime.SetStatus("TRACE: skip send failed, " + reason);
             }
-
-            MultiplayerPlayerIdentity identity = MultiplayerRuntime.LocalPlayerIdentity;
-            if (identity != null)
+            else
             {
-                identity.CmdRequestSkipTurn();
+                MultiplayerRuntime.SetStatus("TRACE: sent SkipTurnRequestMessage");
             }
             return;
         }

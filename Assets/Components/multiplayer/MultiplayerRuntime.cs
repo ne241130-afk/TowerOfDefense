@@ -11,6 +11,16 @@ public static class MultiplayerRuntime
 
     public static void EnterMultiplayerSession()
     {
+        if (IsMultiplayerSession)
+        {
+            // Keep current readiness when duplicate enter calls happen during scene/network init.
+            if (string.IsNullOrEmpty(StatusMessage))
+            {
+                StatusMessage = "Connecting...";
+            }
+            return;
+        }
+
         IsMultiplayerSession = true;
         IsGameplayReady = false;
         StatusMessage = "Connecting...";
@@ -27,8 +37,20 @@ public static class MultiplayerRuntime
 
     public static void SetLocalPlayer(MultiplayerPlayerIdentity identity, int playerIndex)
     {
+        if (playerIndex < 0 && LocalPlayerIdentity != null && LocalPlayerIndex >= 0)
+        {
+            // Keep already-validated local player index.
+            LocalPlayerIdentity = identity;
+            return;
+        }
+
         LocalPlayerIdentity = identity;
         LocalPlayerIndex = playerIndex;
+
+        if (playerIndex >= 0)
+        {
+            IsGameplayReady = true;
+        }
     }
 
     public static void MarkGameplayReady()
@@ -48,9 +70,11 @@ public static class MultiplayerRuntime
         float normalized = Screen.width > 0 ? Input.mousePosition.x / Screen.width : 0.5f;
         if (LocalPlayerIndex == 0)
         {
-            return normalized < 0.5f;
+            // Host(Player0) controls RIGHT side.
+            return normalized >= 0.5f;
         }
 
-        return normalized >= 0.5f;
+        // Guest(Player1) controls LEFT side.
+        return normalized < 0.5f;
     }
 }
