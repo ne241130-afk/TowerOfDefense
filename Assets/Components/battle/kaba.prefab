@@ -310,7 +310,7 @@ MonoBehaviour:
   stats:
     animalName: kaba
     diet: 2
-    captureHitsRequired: 1
+    captureHitsRequired: 2
     squaresPerTurn: 1
     turnsPerMove: 1
     swampImmune: 0

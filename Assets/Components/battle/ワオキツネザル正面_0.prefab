@@ -310,7 +310,7 @@ MonoBehaviour:
   stats:
     animalName: kitune
     diet: 1
-    captureHitsRequired: 1
+    captureHitsRequired: 2
     squaresPerTurn: 3
     turnsPerMove: 1
     swampImmune: 0
