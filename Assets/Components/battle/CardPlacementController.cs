@@ -144,8 +144,34 @@ public class CardPlacementController : MonoBehaviour
                     return;
                 }
 
-                string cardId = MultiplayerCardCatalog.GetCardId(selectedCard);
-                Debug.Log($"[TRACE][Placement] selectedCard name={selectedCard.cardName} generatedCardId={cardId}");
+                Vector3Int cell = new Vector3Int(hoverCell.x, hoverCell.y, hoverCell.z);
+                int handIndex = -1;
+                CardData requestCard = selectedCard;
+                if (CardDeckManager.Instance != null)
+                {
+                    handIndex = CardDeckManager.Instance.FindSlotIndex(selectedSlot);
+                    if (handIndex >= 0)
+                    {
+                        CardData handCard = CardDeckManager.Instance.GetHandCardAt(handIndex);
+                        if (handCard != null)
+                        {
+                            requestCard = handCard;
+                        }
+                    }
+
+                    if (handIndex < 0)
+                    {
+                        handIndex = CardDeckManager.Instance.FindHandIndex(selectedCard);
+                    }
+                }
+
+                if (selectedSlot != null && selectedSlot.cardData != null)
+                {
+                    requestCard = selectedSlot.cardData;
+                }
+
+                string cardId = MultiplayerCardCatalog.GetCardId(requestCard);
+                Debug.Log($"[TRACE][Placement] selectedCard name={selectedCard.cardName} requestCard={(requestCard == null ? "null" : requestCard.cardName)} generatedCardId={cardId}");
                 if (string.IsNullOrEmpty(cardId))
                 {
                     MultiplayerRuntime.SetStatus("TRACE: blocked, card id is empty");
@@ -153,16 +179,6 @@ public class CardPlacementController : MonoBehaviour
                     return;
                 }
 
-                Vector3Int cell = new Vector3Int(hoverCell.x, hoverCell.y, hoverCell.z);
-                int handIndex = -1;
-                if (CardDeckManager.Instance != null)
-                {
-                    handIndex = CardDeckManager.Instance.FindSlotIndex(selectedSlot);
-                    if (handIndex < 0)
-                    {
-                        handIndex = CardDeckManager.Instance.FindHandIndex(selectedCard);
-                    }
-                }
                 Debug.Log($"[TRACE][Placement] Attempting PlaceCardRequestMessage cardId={cardId} handIndex={handIndex} cell=({cell.x},{cell.y},{cell.z})");
                 if (!MultiplayerActionClient.TrySendPlaceCard(cardId, handIndex, cell, out string sendReason))
                 {
@@ -220,21 +236,9 @@ public class CardPlacementController : MonoBehaviour
 
             if (IsResolvedIdentityUsable(resolved))
             {
-                MultiplayerRuntime.SetLocalPlayer(resolved, resolved.PlayerIndex);
+                MultiplayerRuntime.SetLocalPlayer(resolved);
                 Debug.Log($"[TRACE][Placement] Resolved LocalPlayerIdentity via fallback. playerIndex={resolved.PlayerIndex}");
                 return resolved;
-            }
-
-            MultiplayerPlayerIdentity[] all = FindObjectsByType<MultiplayerPlayerIdentity>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-            foreach (MultiplayerPlayerIdentity candidate in all)
-            {
-                if (candidate == null) continue;
-
-                if (!IsResolvedIdentityUsable(candidate)) continue;
-
-                MultiplayerRuntime.SetLocalPlayer(candidate, candidate.PlayerIndex);
-                Debug.Log($"[TRACE][Placement] Resolved LocalPlayerIdentity via scene search. playerIndex={candidate.PlayerIndex}");
-                return candidate;
             }
 
             return null;

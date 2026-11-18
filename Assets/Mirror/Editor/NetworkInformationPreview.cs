@@ -60,7 +60,9 @@ namespace Mirror
         }
 
         GUIContent title;
-        Styles styles = new Styles();
+        // EditorStyles is only safe to read while Unity is drawing editor GUI.
+        // ObjectPreview may be constructed before that GUI context exists.
+        Styles styles;
 
         public override GUIContent GetPreviewTitle()
         {
@@ -75,6 +77,13 @@ namespace Mirror
         {
             // need to check if target is null to stop MissingReferenceException
             return target != null && target is GameObject gameObject && gameObject.GetComponent<NetworkIdentity>() != null;
+        }
+
+        public override void Cleanup()
+        {
+            styles = null;
+            title = null;
+            base.Cleanup();
         }
 
         public override void OnPreviewGUI(Rect r, GUIStyle background)

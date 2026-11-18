@@ -19729,6 +19729,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MoneyUI
   economyManager: {fileID: 567539160}
   moneyText: {fileID: 976634865}
+  assignedPlayerIndex: 1
   moneyEffect: {fileID: 1965081082}
 --- !u!114 &976634865
 MonoBehaviour:
@@ -20318,6 +20319,16 @@ MonoBehaviour:
   - {fileID: 1596778372}
   - {fileID: 1734196611}
   - {fileID: 1615898778}
+  hostCardSlots:
+  - {fileID: 692885761}
+  - {fileID: 1596778372}
+  - {fileID: 1734196611}
+  - {fileID: 1615898778}
+  guestCardSlots:
+  - {fileID: 1513426440}
+  - {fileID: 1377050267}
+  - {fileID: 1975074679}
+  - {fileID: 641866524}
   handSize: 4
   reloadCost: 50
 --- !u!4 &1116637195
@@ -20487,6 +20498,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MoneyUI
   economyManager: {fileID: 567539160}
   moneyText: {fileID: 1120945054}
+  assignedPlayerIndex: 0
   moneyEffect: {fileID: 1965081082}
 --- !u!1 &1124303445
 GameObject:

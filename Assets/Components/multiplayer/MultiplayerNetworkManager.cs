@@ -2,6 +2,7 @@ using Mirror;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Reflection;
+using System.Collections;
 using System.Collections.Generic;
 
 public class MultiplayerNetworkManager : NetworkManager
@@ -9,8 +10,6 @@ public class MultiplayerNetworkManager : NetworkManager
     public static MultiplayerNetworkManager Instance { get; private set; }
 
     private const uint DynamicPlayerAssetId = 0x4D505031;
-    private static bool playerSpawnHandlerRegistered;
-    private static bool coordinatorSpawnHandlerRegistered;
 
     [Header("LAN Discovery")]
     public MultiplayerLanDiscovery lanDiscovery;
@@ -23,6 +22,7 @@ public class MultiplayerNetworkManager : NetworkManager
 
     private bool changingToBattle;
     private bool changingToResult;
+    private readonly HashSet<int> pendingDelayedSyncConnectionIds = new HashSet<int>();
 
     public override void Awake()
     {
@@ -42,8 +42,6 @@ public class MultiplayerNetworkManager : NetworkManager
 
         base.Awake();
         Instance = this;
-        RegisterDynamicPlayerSpawnHandlerIfNeeded();
-        RegisterDynamicCoordinatorSpawnHandlerIfNeeded();
 
         if (lanDiscovery == null)
         {
@@ -79,10 +77,12 @@ public class MultiplayerNetworkManager : NetworkManager
     {
         if (numPlayers >= maxConnections)
         {
+            Debug.LogWarning($"[TRACE][Connection] rejecting connectionId={(conn != null ? conn.connectionId : -1)}: players={numPlayers}/{maxConnections}");
             conn.Disconnect();
             return;
         }
 
+        Debug.Log($"[TRACE][Connection] accepted connectionId={(conn != null ? conn.connectionId : -1)} players={numPlayers}/{maxConnections}");
         base.OnServerConnect(conn);
     }
 
@@ -90,21 +90,34 @@ public class MultiplayerNetworkManager : NetworkManager
     {
         if (numPlayers >= maxConnections)
         {
+            Debug.LogWarning($"[TRACE][Connection] rejecting AddPlayer connectionId={(conn != null ? conn.connectionId : -1)}: players={numPlayers}/{maxConnections}");
             conn.Disconnect();
             return;
         }
 
-        int playerIndex = numPlayers;
+        int playerIndex = conn.connectionId == 0 ? 0 : 1;
 
         GameObject player = CreateRuntimePlayerObject($"Player_{playerIndex + 1}");
         MultiplayerPlayerIdentity identity = player.GetComponent<MultiplayerPlayerIdentity>();
+        if (identity == null)
+        {
+            Debug.LogError("[TRACE][PlayerIndex] Runtime player is missing MultiplayerPlayerIdentity; AddPlayer was cancelled.");
+            Destroy(player);
+            return;
+        }
+
+        // Include the authoritative slot in Mirror's initial spawn payload so
+        // the client does not depend on receiving a later SyncVar delta.
         identity.SetPlayerIndexServer(playerIndex);
 
         if (!NetworkServer.AddPlayerForConnection(conn, player, DynamicPlayerAssetId))
         {
+            Debug.LogError($"[TRACE][Connection] AddPlayerForConnection failed for connectionId={(conn != null ? conn.connectionId : -1)}; existingIdentity={(conn != null && conn.identity != null)}");
             Destroy(player);
             return;
         }
+
+        Debug.Log($"[TRACE][PlayerIndex] server assigned connectionId={(conn != null ? conn.connectionId : -1)} index={identity.PlayerIndex}");
 
         if (!changingToBattle && numPlayers == maxConnections)
         {
@@ -115,6 +128,7 @@ public class MultiplayerNetworkManager : NetworkManager
 
     public override void OnServerDisconnect(NetworkConnectionToClient conn)
     {
+        Debug.LogWarning($"[TRACE][Connection] disconnected connectionId={(conn != null ? conn.connectionId : -1)}");
         base.OnServerDisconnect(conn);
 
         if (SceneManager.GetActiveScene().name == multiBattleSceneName)
@@ -133,6 +147,52 @@ public class MultiplayerNetworkManager : NetworkManager
         if (sceneName == multiBattleSceneName)
         {
             MultiplayerMatchCoordinator.SpawnOnServer();
+            MultiplayerMatchCoordinator.Instance?.ServerTryInitializeAndSyncAll();
+        }
+    }
+
+    public override void OnServerReady(NetworkConnectionToClient conn)
+    {
+        base.OnServerReady(conn);
+
+        if (!NetworkServer.active) return;
+        if (SceneManager.GetActiveScene().name != multiBattleSceneName) return;
+
+        MultiplayerMatchCoordinator.Instance?.ServerTryInitializeAndSyncAll();
+        MultiplayerMatchCoordinator.Instance?.ServerSyncStateToConnection(conn);
+
+        if (conn != null && pendingDelayedSyncConnectionIds.Add(conn.connectionId))
+        {
+            StartCoroutine(ServerDelayedResync(conn.connectionId, 1f));
+        }
+    }
+
+    private void Update()
+    {
+        if (!NetworkClient.active) return;
+        MultiplayerMatchCoordinator.TryApplyPendingLocalPrivateState();
+    }
+
+    [Server]
+    private IEnumerator ServerDelayedResync(int connectionId, float delaySeconds)
+    {
+        yield return new WaitForSeconds(delaySeconds);
+
+        try
+        {
+            if (!NetworkServer.active) yield break;
+            if (SceneManager.GetActiveScene().name != multiBattleSceneName) yield break;
+
+            MultiplayerMatchCoordinator.Instance?.ServerTryInitializeAndSyncAll();
+
+            if (NetworkServer.connections.TryGetValue(connectionId, out NetworkConnectionToClient conn) && conn != null)
+            {
+                MultiplayerMatchCoordinator.Instance?.ServerSyncStateToConnection(conn);
+            }
+        }
+        finally
+        {
+            pendingDelayedSyncConnectionIds.Remove(connectionId);
         }
     }
 
@@ -298,6 +358,11 @@ public class MultiplayerNetworkManager : NetworkManager
 
     public override void OnStartClient()
     {
+        // Mirror clears custom spawn handlers on Shutdown. This manager survives
+        // reconnects, so register them for every new client session.
+        RegisterDynamicPlayerSpawnHandler();
+        RegisterDynamicCoordinatorSpawnHandler();
+        Debug.Log("[TRACE][SpawnHandler] registered player and coordinator handlers for client session");
         base.OnStartClient();
 
         NetworkClient.RegisterHandler<PrivateStateMessage>(OnClientPrivateStateMessage, false);
@@ -400,7 +465,7 @@ public class MultiplayerNetworkManager : NetworkManager
             return;
         }
 
-        bool clearSelection = MultiplayerRuntime.LocalPlayerIndex == msg.actorPlayerIndex;
+        bool clearSelection = MultiplayerRuntime.GetEffectiveLocalPlayerIndex() == msg.actorPlayerIndex;
         CardPlacementController.Instance.ApplyPlacementFromNetwork(card, new Vector3Int(msg.x, msg.y, msg.z), clearSelection);
     }
 
@@ -444,32 +509,25 @@ public class MultiplayerNetworkManager : NetworkManager
         }
     }
 
-    private static void RegisterDynamicPlayerSpawnHandlerIfNeeded()
+    private static void RegisterDynamicPlayerSpawnHandler()
     {
-        if (playerSpawnHandlerRegistered) return;
-
         NetworkClient.RegisterSpawnHandler(
             DynamicPlayerAssetId,
             SpawnDynamicPlayer,
             UnspawnDynamicPlayer);
-
-        playerSpawnHandlerRegistered = true;
     }
 
-    private static void RegisterDynamicCoordinatorSpawnHandlerIfNeeded()
+    private static void RegisterDynamicCoordinatorSpawnHandler()
     {
-        if (coordinatorSpawnHandlerRegistered) return;
-
         NetworkClient.RegisterSpawnHandler(
             MultiplayerMatchCoordinator.DynamicCoordinatorAssetId,
             SpawnDynamicCoordinator,
             UnspawnDynamicCoordinator);
-
-        coordinatorSpawnHandlerRegistered = true;
     }
 
     private static GameObject SpawnDynamicPlayer(Vector3 position, uint assetId)
     {
+        Debug.Log($"[TRACE][SpawnHandler] spawning dynamic player assetId={assetId}");
         GameObject go = CreateRuntimePlayerObject("RemotePlayer");
         go.transform.position = position;
         return go;
@@ -485,6 +543,7 @@ public class MultiplayerNetworkManager : NetworkManager
 
     private static GameObject SpawnDynamicCoordinator(Vector3 position, uint assetId)
     {
+        Debug.Log($"[TRACE][SpawnHandler] spawning dynamic coordinator assetId={assetId}");
         GameObject go = MultiplayerMatchCoordinator.CreateRuntimeCoordinatorObject("RemoteMatchCoordinator");
         go.transform.position = position;
         return go;
@@ -501,8 +560,10 @@ public class MultiplayerNetworkManager : NetworkManager
     private static GameObject CreateRuntimePlayerObject(string objectName)
     {
         GameObject player = new GameObject(objectName);
-        player.AddComponent<NetworkIdentity>();
+        // NetworkIdentity caches NetworkBehaviours in Awake. Add it last so the
+        // player behaviour is present in that cache for callbacks and SyncVars.
         player.AddComponent<MultiplayerPlayerIdentity>();
+        player.AddComponent<NetworkIdentity>();
         return player;
     }
 }

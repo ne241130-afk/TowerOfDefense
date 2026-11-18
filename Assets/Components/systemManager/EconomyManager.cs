@@ -63,12 +63,23 @@ public class EconomyManager : MonoBehaviour, ITurnActor
     // ITurnActor: ターン経過で収入を加算
     public void OnTurnTick()
     {
+        if (MultiplayerRuntime.IsMultiplayerSession)
+        {
+            // Multiplayer money is server-authoritative and synchronized from network state.
+            return;
+        }
+
         AddMoney(incomePerTurn);
     }
 
     // 所持金を増やす（外部からも使用可能）
     public void AddMoney(int amount)
     {
+        if (MultiplayerRuntime.IsMultiplayerSession)
+        {
+            return;
+        }
+
         if (amount == 0) return;
         currentMoney += amount;
         if (currentMoney < 0) currentMoney = 0;
@@ -78,6 +89,11 @@ public class EconomyManager : MonoBehaviour, ITurnActor
     // 支払いを試みる。成功すれば true（所持金から減る）
     public bool TrySpend(int amount)
     {
+        if (MultiplayerRuntime.IsMultiplayerSession)
+        {
+            return false;
+        }
+
         if (amount <= 0) return true;
         if (currentMoney >= amount)
         {
@@ -91,7 +107,14 @@ public class EconomyManager : MonoBehaviour, ITurnActor
     // 強制的に所持金を設定（デバッグやリセット用）
     public void SetMoney(int amount)
     {
-        currentMoney = Mathf.Max(0, amount);
+        int nextAmount = Mathf.Max(0, amount);
+        if (currentMoney == nextAmount)
+        {
+            return;
+        }
+
+        Debug.Log($"[TRACE][EconomySync] SetMoney from={currentMoney} to={nextAmount} multiplayer={MultiplayerRuntime.IsMultiplayerSession}");
+        currentMoney = nextAmount;
         OnMoneyChanged?.Invoke(currentMoney);
     }
 

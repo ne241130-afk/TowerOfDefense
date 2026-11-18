@@ -35,26 +35,51 @@ public static class MultiplayerRuntime
         StatusMessage = message;
     }
 
-    public static void SetLocalPlayer(MultiplayerPlayerIdentity identity, int playerIndex)
+    public static void SetLocalPlayer(MultiplayerPlayerIdentity identity)
     {
-        if (playerIndex < 0 && LocalPlayerIdentity != null && LocalPlayerIndex >= 0)
+        if (identity == null) return;
+
+        // Never accept a guessed or caller-cached index. Bind only an identity
+        // Mirror associates with this client, and read its server-owned SyncVar.
+        if (Mirror.NetworkClient.active)
         {
-            // Keep already-validated local player index.
-            LocalPlayerIdentity = identity;
-            return;
+            try
+            {
+                Mirror.NetworkIdentity localPlayer = Mirror.NetworkClient.localPlayer;
+                Mirror.NetworkIdentity connectionIdentity = Mirror.NetworkClient.connection != null
+                    ? Mirror.NetworkClient.connection.identity
+                    : null;
+                bool isLocalPlayer = localPlayer != null && localPlayer.netId == identity.netId;
+                bool isConnectionIdentity = connectionIdentity != null && connectionIdentity.netId == identity.netId;
+                if (!isLocalPlayer && !isConnectionIdentity)
+                {
+                    return;
+                }
+            }
+            catch
+            {
+                return;
+            }
         }
 
         LocalPlayerIdentity = identity;
-        LocalPlayerIndex = playerIndex;
-
-        if (playerIndex >= 0)
+        int syncedIndex = identity.PlayerIndex;
+        if (syncedIndex == 0 || syncedIndex == 1)
         {
+            LocalPlayerIndex = syncedIndex;
             IsGameplayReady = true;
+            return;
         }
+
+        LocalPlayerIndex = -1;
+        IsGameplayReady = false;
     }
 
     public static void MarkGameplayReady()
     {
+        // The match may be ready before this client's player index has arrived.
+        // Keep input gated until the authoritative identity is usable.
+        if (IsMultiplayerSession && GetEffectiveLocalPlayerIndex() < 0) return;
         IsGameplayReady = true;
     }
 
@@ -63,12 +88,58 @@ public static class MultiplayerRuntime
         StatusMessage = message;
     }
 
+    public static int GetEffectiveLocalPlayerIndex()
+    {
+        if (Mirror.NetworkClient.active)
+        {
+            MultiplayerPlayerIdentity identity = null;
+            try
+            {
+                var local = Mirror.NetworkClient.localPlayer;
+                if (local != null)
+                {
+                    identity = local.GetComponent<MultiplayerPlayerIdentity>();
+                }
+
+                if (identity == null && Mirror.NetworkClient.connection != null && Mirror.NetworkClient.connection.identity != null)
+                {
+                    identity = Mirror.NetworkClient.connection.identity.GetComponent<MultiplayerPlayerIdentity>();
+                }
+            }
+            catch
+            {
+            }
+
+            if (identity != null && (identity.PlayerIndex == 0 || identity.PlayerIndex == 1))
+            {
+                LocalPlayerIdentity = identity;
+                LocalPlayerIndex = identity.PlayerIndex;
+                return LocalPlayerIndex;
+            }
+
+            // While the local identity or its SyncVar is still arriving, do not
+            // reuse a stale cached value from an earlier identity/session.
+            LocalPlayerIdentity = identity;
+            LocalPlayerIndex = -1;
+            return -1;
+        }
+
+        return LocalPlayerIndex == 0 || LocalPlayerIndex == 1 ? LocalPlayerIndex : -1;
+    }
+
     public static bool IsPointerInsideOwnHalf()
     {
-        if (!IsMultiplayerSession || LocalPlayerIndex < 0) return true;
+        if (!IsMultiplayerSession) return true;
+
+        int playerIndex = GetEffectiveLocalPlayerIndex();
+        if (playerIndex < 0)
+        {
+            // Do not allow full-board placement while the local player index is still unresolved.
+            return false;
+        }
 
         float normalized = Screen.width > 0 ? Input.mousePosition.x / Screen.width : 0.5f;
-        if (LocalPlayerIndex == 0)
+        if (playerIndex == 0)
         {
             // Host(Player0) controls RIGHT side.
             return normalized >= 0.5f;

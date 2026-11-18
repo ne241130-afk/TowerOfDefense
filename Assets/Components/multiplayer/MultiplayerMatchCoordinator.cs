@@ -40,6 +40,10 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
     private int handSize = 4;
     private bool serverInitialized;
 
+    private static bool hasPendingLocalPrivateState;
+    private static string pendingHandCsv = string.Empty;
+    private static int pendingMoney;
+
     public static void SpawnOnServer()
     {
         if (!NetworkServer.active) return;
@@ -59,8 +63,10 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
     public static GameObject CreateRuntimeCoordinatorObject(string objectName)
     {
         GameObject go = new GameObject(objectName);
-        go.AddComponent<NetworkIdentity>();
+        // NetworkIdentity caches NetworkBehaviours in Awake; add it after the
+        // coordinator so its SyncVars and lifecycle callbacks are registered.
         go.AddComponent<MultiplayerMatchCoordinator>();
+        go.AddComponent<NetworkIdentity>();
         return go;
     }
 
@@ -83,6 +89,7 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
     public override void OnStartClient()
     {
         base.OnStartClient();
+        Debug.Log($"[TRACE][PublicMoney] coordinator client started p0={player0Money} p1={player1Money} ready={matchReady}");
         MultiplayerRuntime.EnterMultiplayerSession();
         MultiplayerRuntime.SetStatus("Preparing match: waiting for sync...");
         if (matchReady)
@@ -90,6 +97,7 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
             MultiplayerRuntime.MarkGameplayReady();
             MultiplayerRuntime.SetStatus("Connected. Match start");
         }
+        TrySyncLocalEconomyFromPublicState();
         NotifyPublicStateChanged();
     }
 
@@ -140,19 +148,10 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
             int index = identity.PlayerIndex;
             if (index < 0)
             {
-                if (!playerByIndex.ContainsKey(0))
-                {
-                    index = 0;
-                }
-                else if (!playerByIndex.ContainsKey(1))
-                {
-                    index = 1;
-                }
-
-                if (index >= 0)
-                {
-                    identity.SetPlayerIndexServer(index);
-                }
+                // Do not invent a second player-index mapping here. The network
+                // manager assigns it before spawning; wait for that authoritative value.
+                Debug.LogWarning($"[TRACE][ServerInit] waiting for player index sync on connection {conn.connectionId}");
+                continue;
             }
 
             if (index < 0) continue;
@@ -185,6 +184,7 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
         {
             if (!playerStates.TryGetValue(pair.Key, out ServerPlayerState state)) continue;
             SetPublicStateFromServer(pair.Key, state);
+            Debug.Log($"[TRACE][ServerInit] player={pair.Key} initialMoney={state.money} handCount={state.hand.Count}");
 
             TrySendPrivateState(pair.Value, state);
             TrySendStatus(pair.Value, pair.Key == 0 ? "Host: control RIGHT side" : "Guest: control LEFT side");
@@ -197,6 +197,7 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
 
         serverInitialized = true;
         matchReady = true;
+        Debug.Log($"[TRACE][ServerInit] ready p0Money={player0Money} p1Money={player1Money}");
     }
 
     [Server]
@@ -279,6 +280,13 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
             Debug.LogWarning($"[TRACE][ServerPlace] area warning ignored: player={sender.PlayerIndex} cell=({centerCell.x},{centerCell.y},{centerCell.z})");
         }
 
+        if (FieldGridConfig.Instance != null && !FieldGridConfig.Instance.IsWalkable(centerCell))
+        {
+            TrySendStatus(sender, "TRACE: rejected, invalid cell");
+            Debug.LogWarning($"[TRACE][ServerPlace] rejected: invalid cell (not walkable). player={sender.PlayerIndex} cell=({centerCell.x},{centerCell.y},{centerCell.z})");
+            return;
+        }
+
         if (!playerStates.TryGetValue(sender.PlayerIndex, out ServerPlayerState state))
         {
             TrySendStatus(sender, "TRACE: rejected, server state missing");
@@ -325,8 +333,8 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
 
         if (card.cost > state.money)
         {
-            TrySendStatus(sender, "TRACE: rejected, not enough money");
-            Debug.Log("[TRACE][ServerPlace] rejected: not enough money.");
+            TrySendStatus(sender, $"TRACE: rejected, not enough money (have={state.money}, need={card.cost}, card={effectiveCardId})");
+            Debug.LogWarning($"[TRACE][ServerPlace] rejected: not enough money. player={sender.PlayerIndex} have={state.money} need={card.cost} requested={cardId} effective={effectiveCardId} handIndex={handIndex}");
             return;
         }
 
@@ -413,6 +421,7 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
         endedThisRound[0] = false;
         endedThisRound[1] = false;
 
+        ApplyTurnIncomeOnServerAndSync();
         TryAdvanceTurnForClients();
         SetStatusForPlayer(0, "TRACE: both actions complete, next turn");
         SetStatusForPlayer(1, "TRACE: both actions complete, next turn");
@@ -420,12 +429,122 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
     }
 
     [Server]
+    private void ApplyTurnIncomeOnServerAndSync()
+    {
+        int income = 0;
+        if (EconomyManager.Instance != null)
+        {
+            income = Mathf.Max(0, EconomyManager.Instance.incomePerTurn);
+        }
+
+        if (income <= 0)
+        {
+            foreach (KeyValuePair<int, MultiplayerPlayerIdentity> pair in playerByIndex)
+            {
+                if (pair.Value == null) continue;
+                if (!playerStates.TryGetValue(pair.Key, out ServerPlayerState state) || state == null) continue;
+
+                SetPublicStateFromServer(pair.Key, state);
+                TrySendPrivateState(pair.Value, state);
+            }
+
+            return;
+        }
+
+        foreach (KeyValuePair<int, MultiplayerPlayerIdentity> pair in playerByIndex)
+        {
+            if (pair.Value == null) continue;
+            if (!playerStates.TryGetValue(pair.Key, out ServerPlayerState state) || state == null) continue;
+
+            state.money += income;
+            SetPublicStateFromServer(pair.Key, state);
+            TrySendPrivateState(pair.Value, state);
+        }
+    }
+
+    [Server]
+    private MultiplayerPlayerIdentity ResolveServerIdentityForPlayerIndex(int playerIndex)
+    {
+        if (playerIndex < 0) return null;
+
+        if (playerByIndex.TryGetValue(playerIndex, out MultiplayerPlayerIdentity cached) && cached != null)
+        {
+            try
+            {
+                if (cached.netIdentity != null)
+                {
+                    return cached;
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        foreach (NetworkConnectionToClient conn in NetworkServer.connections.Values)
+        {
+            if (conn == null || conn.identity == null) continue;
+
+            MultiplayerPlayerIdentity identity = conn.identity.GetComponent<MultiplayerPlayerIdentity>();
+            if (identity == null) continue;
+            if (identity.PlayerIndex != playerIndex) continue;
+
+            playerByIndex[playerIndex] = identity;
+            return identity;
+        }
+
+        return null;
+    }
+
+    [Server]
     private void SetStatusForPlayer(int playerIndex, string message)
     {
-        if (!playerByIndex.TryGetValue(playerIndex, out MultiplayerPlayerIdentity identity)) return;
+        MultiplayerPlayerIdentity identity = ResolveServerIdentityForPlayerIndex(playerIndex);
         if (identity == null) return;
 
         TrySendStatus(identity, message);
+    }
+
+    [Server]
+    private static NetworkConnectionToClient ResolveConnectionForPlayer(MultiplayerPlayerIdentity identity)
+    {
+        if (identity == null) return null;
+
+        try
+        {
+            if (identity.connectionToClient != null) return identity.connectionToClient;
+        }
+        catch
+        {
+        }
+
+        try
+        {
+            if (identity.netIdentity != null && identity.netIdentity.connectionToClient != null)
+            {
+                return identity.netIdentity.connectionToClient;
+            }
+        }
+        catch
+        {
+        }
+
+        try
+        {
+            foreach (var pair in NetworkServer.connections)
+            {
+                if (pair.Value == null || pair.Value.identity == null) continue;
+                if (pair.Value.identity.netId == identity.netId)
+                {
+                    return pair.Value;
+                }
+            }
+        }
+        catch
+        {
+        }
+
+        return null;
     }
 
     [Server]
@@ -433,15 +552,15 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
     {
         if (identity == null || state == null) return;
 
+        NetworkConnectionToClient conn = ResolveConnectionForPlayer(identity);
+        if (conn == null)
+        {
+            Debug.LogWarning("[TRACE][ServerMSG] PrivateState skipped: target connection is null");
+            return;
+        }
+
         try
         {
-            NetworkConnectionToClient conn = identity.connectionToClient;
-            if (conn == null)
-            {
-                Debug.LogWarning("[TRACE][ServerMSG] PrivateState skipped: target connection is null");
-                return;
-            }
-
             conn.Send(new PrivateStateMessage
             {
                 handCsv = string.Join("|", state.hand),
@@ -459,15 +578,15 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
     {
         if (identity == null) return;
 
+        NetworkConnectionToClient conn = ResolveConnectionForPlayer(identity);
+        if (conn == null)
+        {
+            Debug.LogWarning("[TRACE][ServerMSG] Status skipped: target connection is null");
+            return;
+        }
+
         try
         {
-            NetworkConnectionToClient conn = identity.connectionToClient;
-            if (conn == null)
-            {
-                Debug.LogWarning("[TRACE][ServerMSG] Status skipped: target connection is null");
-                return;
-            }
-
             conn.Send(new StatusMessage { message = message });
         }
         catch (Exception ex)
@@ -530,6 +649,58 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
         InitializeServerState();
     }
 
+    [Server]
+    public void ServerTryInitializeAndSyncAll()
+    {
+        EnsureServerStateReady();
+        if (!matchReady) return;
+
+        foreach (KeyValuePair<int, MultiplayerPlayerIdentity> pair in playerByIndex)
+        {
+            if (pair.Value == null) continue;
+            if (!playerStates.TryGetValue(pair.Key, out ServerPlayerState state)) continue;
+
+            SetPublicStateFromServer(pair.Key, state);
+            TrySendPrivateState(pair.Value, state);
+            TrySendStatus(pair.Value, pair.Key == 0 ? "Host: control RIGHT side" : "Guest: control LEFT side");
+        }
+
+        TryBroadcastHandsToClients();
+    }
+
+    [Server]
+    public void ServerSyncStateToConnection(NetworkConnectionToClient conn)
+    {
+        EnsureServerStateReady();
+        if (!matchReady) return;
+        if (conn == null) return;
+
+        MultiplayerPlayerIdentity identity = null;
+        if (conn.identity != null)
+        {
+            identity = conn.identity.GetComponent<MultiplayerPlayerIdentity>();
+        }
+
+        if (identity == null)
+        {
+            foreach (NetworkIdentity ni in NetworkServer.spawned.Values)
+            {
+                if (ni == null) continue;
+                if (ni.connectionToClient != conn) continue;
+                identity = ni.GetComponent<MultiplayerPlayerIdentity>();
+                if (identity != null) break;
+            }
+        }
+
+        if (identity == null) return;
+        if (!playerStates.TryGetValue(identity.PlayerIndex, out ServerPlayerState state)) return;
+
+        SetPublicStateFromServer(identity.PlayerIndex, state);
+        TrySendPrivateState(identity, state);
+        TrySendStatus(identity, identity.PlayerIndex == 0 ? "Host: control RIGHT side" : "Guest: control LEFT side");
+        TryBroadcastHandsToClients();
+    }
+
     [Mirror.ClientRpc]
     private void RpcApplyPlacement(string cardId, int x, int y, int z, int actorPlayerIndex)
     {
@@ -546,7 +717,7 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
             return;
         }
 
-        bool clearSelection = MultiplayerRuntime.LocalPlayerIndex == actorPlayerIndex;
+        bool clearSelection = MultiplayerRuntime.GetEffectiveLocalPlayerIndex() == actorPlayerIndex;
         CardPlacementController.Instance.ApplyPlacementFromNetwork(card, new Vector3Int(x, y, z), clearSelection);
     }
 
@@ -561,11 +732,28 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
         if (!isReady) return;
         MultiplayerRuntime.MarkGameplayReady();
         MultiplayerRuntime.SetStatus("Connected. Match start");
+        TrySyncLocalEconomyFromPublicState();
     }
 
     private void OnPublicValueChanged(int _, int __)
     {
+        TrySyncLocalEconomyFromPublicState();
         NotifyPublicStateChanged();
+    }
+
+    private void TrySyncLocalEconomyFromPublicState()
+    {
+        if (!MultiplayerRuntime.IsMultiplayerSession) return;
+        if (EconomyManager.Instance == null) return;
+
+        int localIndex = MultiplayerRuntime.GetEffectiveLocalPlayerIndex();
+        if (localIndex != 0 && localIndex != 1) return;
+
+        int expectedMoney = localIndex == 0 ? player0Money : player1Money;
+        if (EconomyManager.Instance.CurrentMoney == expectedMoney) return;
+
+        Debug.Log($"[TRACE][MoneySync] localPlayerIndex={localIndex} serverMoney={expectedMoney} current={EconomyManager.Instance.CurrentMoney}");
+        EconomyManager.Instance.SetMoney(expectedMoney);
     }
 
     [Server]
@@ -657,7 +845,18 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
 
     public static void ApplyLocalPrivateState(string handCsv, int money)
     {
+        Debug.Log($"[TRACE][AuthoritativeState] ApplyLocalPrivateState localIndex={MultiplayerRuntime.GetEffectiveLocalPlayerIndex()} handCsv={handCsv ?? "<null>"} money={money}");
+
+        if (CardDeckManager.Instance == null || EconomyManager.Instance == null)
+        {
+            hasPendingLocalPrivateState = true;
+            pendingHandCsv = handCsv ?? string.Empty;
+            pendingMoney = money;
+            return;
+        }
+
         List<CardData> cards = ParseCardList(handCsv);
+        Debug.Log($"[TRACE][AuthoritativeState] parsedCards={cards.Count} targetMoney={money} localIndex={MultiplayerRuntime.GetEffectiveLocalPlayerIndex()}");
 
         if (CardDeckManager.Instance != null)
         {
@@ -671,5 +870,20 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
         }
 
         MultiplayerRuntime.MarkGameplayReady();
+    }
+
+    public static void TryApplyPendingLocalPrivateState()
+    {
+        if (!hasPendingLocalPrivateState) return;
+        if (CardDeckManager.Instance == null || EconomyManager.Instance == null) return;
+
+        string handCsv = pendingHandCsv;
+        int money = pendingMoney;
+
+        hasPendingLocalPrivateState = false;
+        pendingHandCsv = string.Empty;
+        pendingMoney = 0;
+
+        ApplyLocalPrivateState(handCsv, money);
     }
 }

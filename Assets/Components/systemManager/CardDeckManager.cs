@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using UnityEngine.UI;
-using Mirror;
 
 /// <summary>
 /// カードの山札を管理するシステム
@@ -29,7 +28,14 @@ public class CardDeckManager : MonoBehaviour
     public List<CardData> hand = new List<CardData>();
 
     [Header("手札UI")]
+    [Tooltip("シングルプレイで使用する枠。マルチプレイでは下の左右リストを使います。")]
     public List<CardSlotUI> cardSlots = new List<CardSlotUI>();
+
+    [Header("マルチプレイ手札UI")]
+    [Tooltip("ホスト(Player 0)の手札を表示する右側4枠")]
+    public List<CardSlotUI> hostCardSlots = new List<CardSlotUI>();
+    [Tooltip("ゲスト(Player 1)の手札を表示する左側4枠")]
+    public List<CardSlotUI> guestCardSlots = new List<CardSlotUI>();
 
     [Header("設定")]
     public int handSize = 4;
@@ -44,18 +50,26 @@ public class CardDeckManager : MonoBehaviour
     private List<CardData> initialDeck = new List<CardData>();
 
     private bool networkControlledMode;
-    private bool resolvedLocalSideSlots;
+    private bool hasReceivedPrivateHand;
     private int lastRenderedPlayerIndex = -99;
-    private readonly List<CardSlotUI> leftSideSlots = new List<CardSlotUI>();
-    private readonly List<CardSlotUI> rightSideSlots = new List<CardSlotUI>();
+    private List<CardData> latestPrivateHand = new List<CardData>();
     private List<CardData> latestHostHand = new List<CardData>();
     private List<CardData> latestGuestHand = new List<CardData>();
 
     private void Start()
     {
+        // A networked scene has two server-owned hands. Do not draw a third,
+        // local-only hand into the serialized cardSlots before sync arrives.
+        if (Mirror.NetworkClient.active || Mirror.NetworkServer.active)
+        {
+            networkControlledMode = true;
+        }
+
         if (networkControlledMode)
         {
-            UpdateHandUI();
+            ApplyHandToSlots(hostCardSlots, null, false);
+            ApplyHandToSlots(guestCardSlots, null, false);
+            RenderMultiplayerHands();
             return;
         }
 
@@ -83,17 +97,16 @@ public class CardDeckManager : MonoBehaviour
         if (!MultiplayerRuntime.IsMultiplayerSession) return;
         if (!networkControlledMode) return;
 
-        if (!resolvedLocalSideSlots)
-        {
-            ResolveSlotsForLocalPlayerSide();
-        }
-
-        int currentPlayerIndex = MultiplayerRuntime.LocalPlayerIndex;
+        int currentPlayerIndex = GetEffectiveLocalPlayerIndex();
         if (currentPlayerIndex != lastRenderedPlayerIndex)
         {
             lastRenderedPlayerIndex = currentPlayerIndex;
+            ApplyPrivateHandToResolvedPlayer(currentPlayerIndex);
             RenderMultiplayerHands();
+            return;
         }
+
+        RenderMultiplayerHands();
     }
 
     /// <summary>
@@ -296,11 +309,15 @@ public class CardDeckManager : MonoBehaviour
     {
         networkControlledMode = true;
 
-        ResolveSlotsForLocalPlayerSide();
         int localIndex = GetEffectiveLocalPlayerIndex();
-
         List<CardData> source = newHand ?? new List<CardData>();
+        string handIds = string.Join(",", source.Select(c => c != null ? c.cardName : "<null>"));
+        Debug.Log($"[TRACE][HandSync] SetHandFromNetwork localIndex={localIndex} incomingCount={source.Count} handIds={handIds}");
 
+        // PrivateState is authoritative for this local player's own hand. Update
+        // only that player's display side; HandsSync supplies the opponent side.
+        hasReceivedPrivateHand = true;
+        latestPrivateHand = new List<CardData>(source);
         if (localIndex == 0)
         {
             latestHostHand = new List<CardData>(source);
@@ -319,12 +336,12 @@ public class CardDeckManager : MonoBehaviour
     public void SetBothHandsFromNetwork(List<CardData> hostHand, List<CardData> guestHand)
     {
         networkControlledMode = true;
-        ResolveSlotsForLocalPlayerSide();
-        int localIndex = GetEffectiveLocalPlayerIndex();
 
         latestHostHand = hostHand != null ? new List<CardData>(hostHand) : new List<CardData>();
         latestGuestHand = guestHand != null ? new List<CardData>(guestHand) : new List<CardData>();
+        Debug.Log($"[TRACE][HandsDisplay] received host={latestHostHand.Count} guest={latestGuestHand.Count}");
 
+        int localIndex = GetEffectiveLocalPlayerIndex();
         hand.Clear();
         if (localIndex == 0)
         {
@@ -338,97 +355,37 @@ public class CardDeckManager : MonoBehaviour
         RenderMultiplayerHands();
     }
 
-    private void ResolveSlotsForLocalPlayerSide()
-    {
-        if (resolvedLocalSideSlots) return;
-        if (!MultiplayerRuntime.IsMultiplayerSession) return;
-
-        CardSlotUI[] all = FindObjectsByType<CardSlotUI>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        if (all == null || all.Length == 0) return;
-
-        List<(CardSlotUI slot, float x)> left = new List<(CardSlotUI slot, float x)>();
-        List<(CardSlotUI slot, float x)> right = new List<(CardSlotUI slot, float x)>();
-
-        foreach (CardSlotUI slot in all)
-        {
-            if (slot == null) continue;
-
-            RectTransform rt = slot.GetComponent<RectTransform>();
-            if (rt == null) continue;
-
-            float x = rt.anchoredPosition.x;
-            if (Mathf.Abs(x) < 0.001f)
-            {
-                x = rt.position.x;
-            }
-
-            if (x < 0f)
-            {
-                left.Add((slot, x));
-            }
-            else
-            {
-                right.Add((slot, x));
-            }
-        }
-
-        if (left.Count == 0 || right.Count == 0) return;
-
-        left.Sort((a, b) => a.x.CompareTo(b.x));
-        right.Sort((a, b) => a.x.CompareTo(b.x));
-
-        leftSideSlots.Clear();
-        rightSideSlots.Clear();
-
-        foreach (var p in left)
-        {
-            leftSideSlots.Add(p.slot);
-        }
-
-        foreach (var p in right)
-        {
-            rightSideSlots.Add(p.slot);
-        }
-
-        // Host(Player0)=RIGHT, Guest(Player1)=LEFT
-        int localIndex = GetEffectiveLocalPlayerIndex();
-        cardSlots = localIndex == 0 ? rightSideSlots : leftSideSlots;
-
-        resolvedLocalSideSlots = true;
-    }
-
     private void RenderMultiplayerHands()
     {
-        if (!MultiplayerRuntime.IsMultiplayerSession || !resolvedLocalSideSlots)
-        {
-            return;
-        }
+        if (!networkControlledMode) return;
 
         int localIndex = GetEffectiveLocalPlayerIndex();
+        // Visibility comes from the two synchronized hand lists. The local
+        // player index controls input only; it must not hide either player's cards
+        // while that identity's SyncVar is still arriving.
+        ApplyHandToSlots(hostCardSlots, latestHostHand, localIndex == 0);
+        ApplyHandToSlots(guestCardSlots, latestGuestHand, localIndex == 1);
+    }
 
-        ApplyHandToSlots(rightSideSlots, latestHostHand, localIndex == 0);
-        ApplyHandToSlots(leftSideSlots, latestGuestHand, localIndex == 1);
+    private void ApplyPrivateHandToResolvedPlayer(int localIndex)
+    {
+        // A private hand can arrive before the local PlayerIndex SyncVar. Reapply
+        // it to the correct side once that authoritative index becomes available.
+        if (!hasReceivedPrivateHand) return;
+
+        if (localIndex == 0)
+        {
+            latestHostHand = new List<CardData>(latestPrivateHand);
+        }
+        else if (localIndex == 1)
+        {
+            latestGuestHand = new List<CardData>(latestPrivateHand);
+        }
     }
 
     private static int GetEffectiveLocalPlayerIndex()
     {
-        if (MultiplayerRuntime.LocalPlayerIndex == 0 || MultiplayerRuntime.LocalPlayerIndex == 1)
-        {
-            return MultiplayerRuntime.LocalPlayerIndex;
-        }
-
-        // Fallback when SyncVar index hasn't arrived yet.
-        if (NetworkServer.active && NetworkClient.active)
-        {
-            return 0; // host
-        }
-
-        if (NetworkClient.active)
-        {
-            return 1; // guest
-        }
-
-        return -1;
+        return MultiplayerRuntime.GetEffectiveLocalPlayerIndex();
     }
 
     private static void ApplyHandToSlots(List<CardSlotUI> slots, List<CardData> cards, bool interactable)
@@ -465,6 +422,19 @@ public class CardDeckManager : MonoBehaviour
     public int FindSlotIndex(CardSlotUI slot)
     {
         if (slot == null) return -1;
+        if (MultiplayerRuntime.IsMultiplayerSession)
+        {
+            int localIndex = GetEffectiveLocalPlayerIndex();
+            List<CardSlotUI> localSlots = localIndex == 0 ? hostCardSlots : localIndex == 1 ? guestCardSlots : null;
+            return localSlots != null ? localSlots.IndexOf(slot) : -1;
+        }
+
         return cardSlots.IndexOf(slot);
+    }
+
+    public CardData GetHandCardAt(int index)
+    {
+        if (index < 0 || index >= hand.Count) return null;
+        return hand[index];
     }
 }

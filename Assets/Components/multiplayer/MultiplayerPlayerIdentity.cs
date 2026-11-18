@@ -6,7 +6,6 @@ public class MultiplayerPlayerIdentity : NetworkBehaviour
     [SyncVar(hook = nameof(OnPlayerIndexChanged))]
     private int playerIndex = -1;
 
-    private int latestPlayerIndex = -1;
     private bool hasPendingPrivateState;
     private string pendingHandCsv;
     private int pendingMoney;
@@ -58,7 +57,6 @@ public class MultiplayerPlayerIdentity : NetworkBehaviour
     public override void OnStartAuthority()
     {
         base.OnStartAuthority();
-        latestPlayerIndex = playerIndex;
         TryBindLocalPlayer();
         TryApplyPendingPrivateState();
     }
@@ -66,7 +64,7 @@ public class MultiplayerPlayerIdentity : NetworkBehaviour
     public override void OnStartClient()
     {
         base.OnStartClient();
-        latestPlayerIndex = playerIndex;
+        Debug.Log($"[TRACE][PlayerIndex] OnStartClient index={playerIndex}");
         TryBindLocalPlayer();
         TryApplyPendingPrivateState();
     }
@@ -74,14 +72,19 @@ public class MultiplayerPlayerIdentity : NetworkBehaviour
     public override void OnStartLocalPlayer()
     {
         base.OnStartLocalPlayer();
-        latestPlayerIndex = playerIndex;
+        Debug.Log($"[TRACE][PlayerIndex] OnStartLocalPlayer netId={netId} index={playerIndex}");
         TryBindLocalPlayer();
         TryApplyPendingPrivateState();
     }
 
     private void OnPlayerIndexChanged(int _, int newValue)
     {
-        latestPlayerIndex = newValue;
+        // Mirror also invokes SyncVar hooks on the server (including host mode).
+        // Keep server-side hook execution free of client identity lookups; the
+        // local-player callbacks/Update will bind the host after the value changes.
+        if (NetworkServer.active) return;
+
+        if (NetworkClient.active) Debug.Log($"[TRACE][PlayerIndex] client received index={newValue}");
         TryBindLocalPlayer();
         TryApplyPendingPrivateState();
     }
@@ -93,10 +96,12 @@ public class MultiplayerPlayerIdentity : NetworkBehaviour
         if (!IsLocalPlayerObject()) return;
         if (netId == 0) return;
 
-        // playerIndex sync can arrive later; bind early to allow command path recovery.
-        MultiplayerRuntime.SetLocalPlayer(this, latestPlayerIndex);
-        if (latestPlayerIndex >= 0)
+        // Bind only after the server-assigned SyncVar is valid. -1 is a pending
+        // network state, not a player slot that clients should guess around.
+        MultiplayerRuntime.SetLocalPlayer(this);
+        if (playerIndex == 0 || playerIndex == 1)
         {
+            Debug.Log($"[TRACE][PlayerIndex] local identity bound netId={netId} index={playerIndex}");
             MultiplayerRuntime.MarkGameplayReady();
         }
     }
