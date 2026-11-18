@@ -166,6 +166,7 @@ public class MultiplayerStartUI : MonoBehaviour
 
         addressInput = CreateInput(panelRoot.transform, "AddressInput", "127.0.0.1", new Vector2(0f, 40f));
 
+        /* Hostを個別に表示したい場合は、このブロックのコメントを外す。
         Button hostButton = CreateButton(panelRoot.transform, "HostButton", "HOST", new Vector2(-140f, -40f));
         hostButton.onClick.AddListener(() =>
         {
@@ -176,7 +177,9 @@ public class MultiplayerStartUI : MonoBehaviour
                 NetworkManager.singleton.StartHost();
             }
         });
+        */
 
+        /* Clientを個別に表示したい場合は、このブロックのコメントを外す。
         Button clientButton = CreateButton(panelRoot.transform, "ClientButton", "CLIENT", new Vector2(140f, -40f));
         clientButton.onClick.AddListener(() =>
         {
@@ -188,6 +191,7 @@ public class MultiplayerStartUI : MonoBehaviour
                 NetworkManager.singleton.StartClient();
             }
         });
+        */
 
         Button autoButton = CreateButton(panelRoot.transform, "AutoButton", "AUTO", new Vector2(0f, -40f));
         autoButton.onClick.AddListener(OnAutoConnectClicked);
@@ -375,4 +379,5 @@ public class MultiplayerStartUI : MonoBehaviour
 
         return go.GetComponent<Button>();
     }
+
 }
