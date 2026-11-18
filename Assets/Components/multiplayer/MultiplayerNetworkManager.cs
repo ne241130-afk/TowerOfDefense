@@ -61,6 +61,7 @@ public class MultiplayerNetworkManager : NetworkManager
         changingToResult = false;
         NetworkServer.RegisterHandler<PlaceCardRequestMessage>(OnServerPlaceCardRequestFromClient, false);
         NetworkServer.RegisterHandler<SkipTurnRequestMessage>(OnServerSkipTurnRequestFromClient, false);
+        NetworkServer.RegisterHandler<ReloadHandRequestMessage>(OnServerReloadHandRequestFromClient, false);
         Debug.Log("[TRACE][NetMgr] OnStartServer and registered action handlers (auth=false)");
         lanDiscovery?.StartHostResponder();
     }
@@ -70,6 +71,7 @@ public class MultiplayerNetworkManager : NetworkManager
         base.OnStopServer();
         NetworkServer.UnregisterHandler<PlaceCardRequestMessage>();
         NetworkServer.UnregisterHandler<SkipTurnRequestMessage>();
+        NetworkServer.UnregisterHandler<ReloadHandRequestMessage>();
         Debug.Log("[TRACE][NetMgr] Unregistered action message handlers on server stop");
     }
 
@@ -282,6 +284,34 @@ public class MultiplayerNetworkManager : NetworkManager
         catch (System.Exception ex)
         {
             Debug.LogError("[TRACE][NetMgr] OnServerSkipTurnRequestFromClient exception: " + ex);
+        }
+    }
+
+    [Server]
+    private void OnServerReloadHandRequestFromClient(NetworkConnectionToClient conn, ReloadHandRequestMessage _)
+    {
+        try
+        {
+            Debug.Log($"[TRACE][NetMgr] recv ReloadHandRequestMessage connId={(conn != null ? conn.connectionId : -1)}");
+
+            MultiplayerPlayerIdentity sender = ResolveIdentityFromConnection(conn);
+            if (sender == null)
+            {
+                Debug.LogWarning("[TRACE][NetMgr] reload request rejected: sender identity not found");
+                return;
+            }
+
+            if (MultiplayerMatchCoordinator.Instance == null)
+            {
+                Debug.LogWarning("[TRACE][NetMgr] reload request rejected: coordinator not ready");
+                return;
+            }
+
+            MultiplayerMatchCoordinator.Instance.ServerHandleReloadHand(sender);
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("[TRACE][NetMgr] OnServerReloadHandRequestFromClient exception: " + ex);
         }
     }
 

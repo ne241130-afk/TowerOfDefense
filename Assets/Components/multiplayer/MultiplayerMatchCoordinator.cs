@@ -35,6 +35,7 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
     private readonly Dictionary<int, ServerPlayerState> playerStates = new Dictionary<int, ServerPlayerState>();
     private readonly Dictionary<int, MultiplayerPlayerIdentity> playerByIndex = new Dictionary<int, MultiplayerPlayerIdentity>();
     private readonly bool[] endedThisRound = new bool[2];
+    private readonly bool[] reloadedThisRound = new bool[2];
 
     private int initialMoney = 100;
     private int handSize = 4;
@@ -194,6 +195,8 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
 
         endedThisRound[0] = false;
         endedThisRound[1] = false;
+        reloadedThisRound[0] = false;
+        reloadedThisRound[1] = false;
 
         serverInitialized = true;
         matchReady = true;
@@ -396,6 +399,86 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
     }
 
     [Server]
+    public void ServerHandleReloadHand(MultiplayerPlayerIdentity sender)
+    {
+        EnsureServerStateReady();
+        int playerIndex = sender != null ? sender.PlayerIndex : -1;
+        Debug.Log($"[TRACE][ServerReload] recv sender={playerIndex} matchReady={matchReady}");
+
+        if (sender == null || !matchReady || playerIndex < 0 || playerIndex >= reloadedThisRound.Length)
+        {
+            if (sender != null) TrySendStatus(sender, "Reload rejected: player or match is not ready");
+            Debug.LogWarning("[TRACE][ServerReload] rejected: invalid sender or match not ready.");
+            return;
+        }
+
+        if (IsPlayerAlreadyEnded(playerIndex))
+        {
+            TrySendStatus(sender, "Reload rejected: action already submitted this round");
+            Debug.Log("[TRACE][ServerReload] rejected: player already ended this round.");
+            return;
+        }
+
+        if (reloadedThisRound[playerIndex])
+        {
+            TrySendStatus(sender, "Reload rejected: already reloaded this round");
+            Debug.Log("[TRACE][ServerReload] rejected: already reloaded this round.");
+            return;
+        }
+
+        if (!playerStates.TryGetValue(playerIndex, out ServerPlayerState state) || state == null)
+        {
+            TrySendStatus(sender, "Reload rejected: player state missing");
+            Debug.LogWarning("[TRACE][ServerReload] rejected: player state missing.");
+            return;
+        }
+
+        int reloadCost = CardDeckManager.Instance != null
+            ? Mathf.Max(0, CardDeckManager.Instance.reloadCost)
+            : 50;
+        if (state.money < reloadCost)
+        {
+            TrySendStatus(sender, $"Reload rejected: not enough money (need={reloadCost}, have={state.money})");
+            Debug.LogWarning($"[TRACE][ServerReload] rejected: not enough money player={playerIndex} have={state.money} need={reloadCost}");
+            return;
+        }
+
+        if (state.hand.Count == 0 && state.deck.Count == 0)
+        {
+            TrySendStatus(sender, "Reload rejected: no cards remain");
+            Debug.LogWarning($"[TRACE][ServerReload] rejected: no cards remain for player={playerIndex}");
+            return;
+        }
+
+        state.deck.AddRange(state.hand);
+        state.hand.Clear();
+        ShuffleDeck(state.deck, playerIndex);
+        for (int i = 0; i < handSize && state.deck.Count > 0; i++)
+        {
+            DrawCard(state);
+        }
+
+        state.money -= reloadCost;
+        reloadedThisRound[playerIndex] = true;
+        SetPublicStateFromServer(playerIndex, state);
+        TrySendPrivateState(sender, state);
+        TryBroadcastHandsToClients();
+        TrySendStatus(sender, $"Hand reloaded (cost={reloadCost})");
+        Debug.Log($"[TRACE][ServerReload] accepted player={playerIndex} handCount={state.hand.Count} cost={reloadCost} money={state.money}");
+    }
+
+    [Server]
+    private static void ShuffleDeck(List<string> deck, int playerIndex)
+    {
+        System.Random random = new System.Random(Environment.TickCount + playerIndex * 1009);
+        for (int i = deck.Count - 1; i > 0; i--)
+        {
+            int j = random.Next(i + 1);
+            (deck[i], deck[j]) = (deck[j], deck[i]);
+        }
+    }
+
+    [Server]
     private bool IsPlayerAlreadyEnded(int playerIndex)
     {
         return playerIndex >= 0 && playerIndex < endedThisRound.Length && endedThisRound[playerIndex];
@@ -420,6 +503,8 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
 
         endedThisRound[0] = false;
         endedThisRound[1] = false;
+        reloadedThisRound[0] = false;
+        reloadedThisRound[1] = false;
 
         ApplyTurnIncomeOnServerAndSync();
         TryAdvanceTurnForClients();

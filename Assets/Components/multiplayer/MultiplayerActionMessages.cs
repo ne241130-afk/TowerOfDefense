@@ -14,6 +14,10 @@ public struct SkipTurnRequestMessage : NetworkMessage
 {
 }
 
+public struct ReloadHandRequestMessage : NetworkMessage
+{
+}
+
 public struct PrivateStateMessage : NetworkMessage
 {
     public string handCsv;
@@ -91,6 +95,26 @@ public static class MultiplayerActionClient
 
         NetworkClient.Send(new SkipTurnRequestMessage());
         Debug.Log("[TRACE][MsgClient] Sent SkipTurnRequestMessage");
+        reason = string.Empty;
+        return true;
+    }
+
+    public static bool TrySendReloadHand(out string reason)
+    {
+        if (!NetworkClient.active || !NetworkClient.isConnected)
+        {
+            reason = "client inactive/disconnected";
+            return false;
+        }
+
+        if (!NetworkClient.ready)
+        {
+            reason = "client not ready";
+            return false;
+        }
+
+        NetworkClient.Send(new ReloadHandRequestMessage());
+        Debug.Log("[TRACE][MsgClient] Sent ReloadHandRequestMessage");
         reason = string.Empty;
         return true;
     }

@@ -200,11 +200,28 @@ public class CardDeckManager : MonoBehaviour
 
     /// <summary>
     /// 手札をすべてリロードする。
-    /// 1ターンにつき1回、無料で行える
+    /// シングルプレイでは1ターンに1回無料。マルチプレイではサーバーへ依頼し、設定コストを支払う。
     /// </summary>
     public void ReloadHand()
     {
-        if (networkControlledMode) return;
+        if (networkControlledMode)
+        {
+            if (!MultiplayerRuntime.IsMultiplayerSession)
+            {
+                Debug.LogWarning("[TRACE][Reload] Multiplayer hand is server-controlled, but no multiplayer session is active.");
+                return;
+            }
+
+            if (!MultiplayerActionClient.TrySendReloadHand(out string reason))
+            {
+                MultiplayerRuntime.SetStatus("Reload failed: " + reason);
+                Debug.LogWarning("[TRACE][Reload] request send failed: " + reason);
+                return;
+            }
+
+            MultiplayerRuntime.SetStatus("Reload requested");
+            return;
+        }
         // ターン管理の確認
         if (TurnManager.Instance == null)
         {
