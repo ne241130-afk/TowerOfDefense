@@ -65,7 +65,7 @@ public class MultiplayerStartUI : MonoBehaviour
                 TextMeshProUGUI label = clone.GetComponentInChildren<TextMeshProUGUI>();
                 if (label != null)
                 {
-                    label.text = "MULTI PLAY";
+                    label.text = "ふたりであそぶ";
                 }
 
                 multiplayerButton = clone.GetComponent<Button>();
