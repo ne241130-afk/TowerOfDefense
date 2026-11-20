@@ -48,6 +48,12 @@ public struct AdvanceTurnMessage : NetworkMessage
 {
 }
 
+public struct TurnCoverStateMessage : NetworkMessage
+{
+    public bool cover0Visible;
+    public bool cover1Visible;
+}
+
 public static class MultiplayerActionClient
 {
     public static bool TrySendPlaceCard(string cardId, int handIndex, Vector3Int cell, out string reason)

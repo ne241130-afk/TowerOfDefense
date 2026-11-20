@@ -23,6 +23,9 @@ public class MultiplayerNetworkManager : NetworkManager
     private bool changingToBattle;
     private bool changingToResult;
     private readonly HashSet<int> pendingDelayedSyncConnectionIds = new HashSet<int>();
+    private static GameObject cachedCover0;
+    private static GameObject cachedCover1;
+    private static int cachedCoverSceneHandle = -1;
 
     public override void Awake()
     {
@@ -400,6 +403,7 @@ public class MultiplayerNetworkManager : NetworkManager
         NetworkClient.RegisterHandler<HandsSyncMessage>(OnClientHandsSyncMessage, false);
         NetworkClient.RegisterHandler<PlacementAppliedMessage>(OnClientPlacementAppliedMessage, false);
         NetworkClient.RegisterHandler<AdvanceTurnMessage>(OnClientAdvanceTurnMessage, false);
+        NetworkClient.RegisterHandler<TurnCoverStateMessage>(OnClientTurnCoverStateMessage, false);
     }
 
     public override void OnStopClient()
@@ -411,12 +415,18 @@ public class MultiplayerNetworkManager : NetworkManager
         NetworkClient.UnregisterHandler<HandsSyncMessage>();
         NetworkClient.UnregisterHandler<PlacementAppliedMessage>();
         NetworkClient.UnregisterHandler<AdvanceTurnMessage>();
+        NetworkClient.UnregisterHandler<TurnCoverStateMessage>();
     }
 
     public override void OnClientSceneChanged()
     {
         base.OnClientSceneChanged();
         EnsureClientReadyAndPlayer("OnClientSceneChanged");
+
+        if (SceneManager.GetActiveScene().name == Instance.multiBattleSceneName)
+        {
+            ApplyTurnCoverState(false, false);
+        }
     }
 
     public override void OnClientDisconnect()
@@ -501,7 +511,78 @@ public class MultiplayerNetworkManager : NetworkManager
 
     private static void OnClientAdvanceTurnMessage(AdvanceTurnMessage _)
     {
+        ApplyTurnCoverState(false, false);
         TurnManager.Instance?.AdvanceTurn();
+    }
+
+    private static void OnClientTurnCoverStateMessage(TurnCoverStateMessage msg)
+    {
+        ApplyTurnCoverState(msg.cover0Visible, msg.cover1Visible);
+    }
+
+    private static void ApplyTurnCoverState(bool cover0Visible, bool cover1Visible)
+    {
+        ResolveTurnCoverObjects();
+
+        if (cachedCover0 != null)
+        {
+            cachedCover0.SetActive(cover0Visible);
+        }
+
+        if (cachedCover1 != null)
+        {
+            cachedCover1.SetActive(cover1Visible);
+        }
+    }
+
+    private static void ResolveTurnCoverObjects()
+    {
+        Scene activeScene = SceneManager.GetActiveScene();
+        if (!activeScene.IsValid())
+        {
+            cachedCover0 = null;
+            cachedCover1 = null;
+            cachedCoverSceneHandle = -1;
+            return;
+        }
+
+        if (cachedCoverSceneHandle != activeScene.handle)
+        {
+            cachedCover0 = null;
+            cachedCover1 = null;
+            cachedCoverSceneHandle = activeScene.handle;
+        }
+
+        if (cachedCover0 != null && cachedCover1 != null)
+        {
+            return;
+        }
+
+        GameObject[] roots = activeScene.GetRootGameObjects();
+        foreach (GameObject root in roots)
+        {
+            if (root == null) continue;
+
+            Transform[] nodes = root.GetComponentsInChildren<Transform>(true);
+            foreach (Transform node in nodes)
+            {
+                if (node == null) continue;
+
+                if (cachedCover0 == null && node.name == "cover_0")
+                {
+                    cachedCover0 = node.gameObject;
+                }
+                else if (cachedCover1 == null && node.name == "cover_1")
+                {
+                    cachedCover1 = node.gameObject;
+                }
+
+                if (cachedCover0 != null && cachedCover1 != null)
+                {
+                    return;
+                }
+            }
+        }
     }
 
     private static List<CardData> ParseCardList(string handCsv)

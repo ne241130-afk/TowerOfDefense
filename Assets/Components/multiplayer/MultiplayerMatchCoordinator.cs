@@ -197,6 +197,7 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
         endedThisRound[1] = false;
         reloadedThisRound[0] = false;
         reloadedThisRound[1] = false;
+        TryBroadcastTurnCoverState(false, false);
 
         serverInitialized = true;
         matchReady = true;
@@ -493,6 +494,7 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
 
         if (!(endedThisRound[0] && endedThisRound[1]))
         {
+            TryBroadcastTurnCoverState(endedThisRound[0], endedThisRound[1]);
             SetStatusForPlayer(playerIndex, "TRACE: action accepted, waiting opponent");
 
             int other = playerIndex == 0 ? 1 : 0;
@@ -505,6 +507,8 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
         endedThisRound[1] = false;
         reloadedThisRound[0] = false;
         reloadedThisRound[1] = false;
+
+        TryBroadcastTurnCoverState(false, false);
 
         ApplyTurnIncomeOnServerAndSync();
         TryAdvanceTurnForClients();
@@ -714,6 +718,25 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
         catch (Exception ex)
         {
             Debug.LogWarning("[TRACE][ServerMSG] AdvanceTurn skipped: " + ex.Message);
+        }
+    }
+
+    [Server]
+    private void TryBroadcastTurnCoverState(bool cover0Visible, bool cover1Visible)
+    {
+        try
+        {
+            if (!NetworkServer.active) return;
+
+            NetworkServer.SendToAll(new TurnCoverStateMessage
+            {
+                cover0Visible = cover0Visible,
+                cover1Visible = cover1Visible
+            });
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[TRACE][ServerMSG] TurnCoverState skipped: " + ex.Message);
         }
     }
 
