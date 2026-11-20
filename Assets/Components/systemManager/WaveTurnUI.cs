@@ -41,6 +41,6 @@ public class WaveTurnUI : MonoBehaviour
     private void UpdateDisplay()
     {
         if (waveText != null) waveText.text = $"Wave: {waveManager.currentWave}";
-        if (turnText != null) turnText.text = $"Turn: {Mathf.Max(1, waveManager.turnInWave)}/{waveManager.turnsPerWave}";
+        if (turnText != null) turnText.text = $"Turn: {Mathf.Max(1, waveManager.turnInWave)} / {waveManager.turnsPerWave}";
     }
 }

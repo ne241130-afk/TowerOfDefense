@@ -1553,7 +1553,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 75
+  orthographic size: 60
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -2279,9 +2279,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'ikaku
-
-'
+  m_text: "\u3044\u304B\u304F"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 1e26725dca21f498189b415888113666, type: 2}
   m_sharedMaterial: {fileID: -43726269156847094, guid: 1e26725dca21f498189b415888113666, type: 2}
@@ -19059,7 +19057,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "wave20\u307E\u3067\n\u52D5\u7269\u306E\u8131\u8D70\u3092\n\u963B\u6B62\u3057\u3088\u3046\uFF01\n\n\u52D5\u7269\u304C5\u5339\n\u8131\u8D70\u3057\u305F\u3089\n\u8CA0\u3051\uFF01\n\n\u8131\u8D70\u6570\uFF1A0/5"
+  m_Text: "wave20\u307E\u3067\n\u3069\u3046\u3076\u3064 \u306E \u3060\u3063\u305D\u3046
+    \u3092\n\u305D\u3057\u3057\u3088\u3046\uFF01\n\n\u3069\u3046\u3076\u3064 \u304C
+    5\u3072\u304D\n\u306B\u3052\u305F\u3089\n\u307E\u3051\uFF01\n\n\u306B\u3052\u305F\uFF1A0/5"
 --- !u!222 &1032001446
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -19172,7 +19172,8 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u30AB\u30FC\u30C9\u3092\u9078\u629E\u3059\u308B\u3068\n\u3053\u3053\u306B\u8AAC\u660E\u304C\u8868\u793A\u3055\u308C\u307E\u3059"
+  m_Text: "\u30AB\u30FC\u30C9 \u3092 \u3048\u3089\u3076\u3068\n\u305B\u3064\u3081\u3044
+    \u304C\n\u3067\u308B\u3088"
 --- !u!222 &1085120191
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -19291,6 +19292,8 @@ MonoBehaviour:
   - {fileID: 1596778372}
   - {fileID: 1734196611}
   - {fileID: 1615898778}
+  hostCardSlots: []
+  guestCardSlots: []
   handSize: 4
   reloadCost: 50
 --- !u!4 &1116637195
@@ -19460,6 +19463,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MoneyUI
   economyManager: {fileID: 567539160}
   moneyText: {fileID: 1120945054}
+  assignedPlayerIndex: -1
   moneyEffect: {fileID: 1965081082}
 --- !u!1 &1124303445
 GameObject:
