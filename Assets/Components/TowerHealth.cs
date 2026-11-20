@@ -36,6 +36,7 @@ public class TowerHealth : MonoBehaviour
         {
             //いったん倒れましたの報告
             Debug.Log("Towerが崩壊した。");
+            CommonBgmController.StopBgm();
             SceneManager.LoadScene(gameOverSceneName);
         }
     }

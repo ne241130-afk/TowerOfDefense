@@ -345,6 +345,7 @@ public class MultiplayerNetworkManager : NetworkManager
     public void ServerTransitionToGameOver()
     {
         if (changingToResult) return;
+        CommonBgmController.StopBgm();
         changingToResult = true;
         ServerChangeScene(gameOverSceneName);
     }

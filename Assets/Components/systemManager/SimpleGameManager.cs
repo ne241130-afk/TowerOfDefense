@@ -66,6 +66,8 @@ public class SimpleGameManager : MonoBehaviour
 
     public void GameOver()
     {
+        CommonBgmController.StopBgm();
+
         if (MultiplayerRuntime.IsMultiplayerSession && MultiplayerNetworkManager.Instance != null)
         {
             MultiplayerNetworkManager.Instance.RequestGameOverFromLocal();
