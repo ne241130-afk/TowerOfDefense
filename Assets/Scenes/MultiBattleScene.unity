@@ -2847,19 +2847,9 @@ MonoBehaviour:
     animalPrefab: {fileID: 2599670119332685034, guid: 5184a845c33e74a73b5544f12e8a01f3, type: 3}
     useDefaultSpawnCell: 0
     spawnCell: {x: -25, y: 16, z: 0}
-  - wave: 1
-    turnInWave: 1
-    animalPrefab: {fileID: 2599670119332685034, guid: 5184a845c33e74a73b5544f12e8a01f3, type: 3}
-    useDefaultSpawnCell: 0
-    spawnCell: {x: -11, y: -2, z: 0}
-  - wave: 1
-    turnInWave: 1
-    animalPrefab: {fileID: 8761484550491967488, guid: 6313c850cc4d54d9f961b5b4d6f6073a, type: 3}
-    useDefaultSpawnCell: 0
-    spawnCell: {x: 0, y: -2, z: 0}
   randomGroups:
   - wave: 0
-    waveEnd: 0
+    waveEnd: 99
     turnsPerSpawn: 4
     animalPrefabs:
     - {fileID: 6461936735922963314, guid: 4829df9a63d0d48faac3a01c57dff35d, type: 3}
@@ -2875,7 +2865,7 @@ MonoBehaviour:
     - {x: 2, y: -2, z: 0}
     - {x: -12, y: -2, z: 0}
   - wave: 1
-    waveEnd: 3
+    waveEnd: 4
     turnsPerSpawn: 4
     animalPrefabs:
     - {fileID: 6461936735922963314, guid: 4829df9a63d0d48faac3a01c57dff35d, type: 3}
@@ -2888,8 +2878,8 @@ MonoBehaviour:
     - {fileID: 2599670119332685034, guid: 774637304d3ad41a8b5dd132baf754a5, type: 3}
     spawnCells:
     - {x: 0, y: -2, z: 0}
-  - wave: 4
-    waveEnd: 10
+  - wave: 5
+    waveEnd: 9
     turnsPerSpawn: 3
     animalPrefabs:
     - {fileID: 6461936735922963314, guid: 4829df9a63d0d48faac3a01c57dff35d, type: 3}
@@ -2904,7 +2894,7 @@ MonoBehaviour:
     - {x: 0, y: -2, z: 0}
     - {x: -4, y: -5, z: 0}
   - wave: 11
-    waveEnd: 15
+    waveEnd: 14
     turnsPerSpawn: 2
     animalPrefabs:
     - {fileID: 6461936735922963314, guid: 4829df9a63d0d48faac3a01c57dff35d, type: 3}
