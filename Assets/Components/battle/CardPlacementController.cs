@@ -592,6 +592,10 @@ public class CardPlacementController : MonoBehaviour
                     visualPosition,
                     Quaternion.identity
                 );
+
+                // 鎖の画像のレイヤー
+                chainVisual.layer = 2;
+
                 RegisterPlacedBoardObject(chainVisual);
 
                 // ChainLockFieldEffectに鎖の画像を渡す

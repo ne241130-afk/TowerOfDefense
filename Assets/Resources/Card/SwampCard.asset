@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CardData
   cardName: "\u306C\u307E\u3061"
   description: "\u305B\u3063\u3061 \u3057\u305F\u3068\u3053\u308D \u3092 \u3068\u304A\u308B
-    \u3069\u3046\u3076\u3064 \u306E\n\u3042\u3057 \u304C \u304A\u305D\u304F\u306A\u308B"
+    \u3069\u3046\u3076\u3064 \u306E \u3042\u3057 \u304C \u304A\u305D\u304F\u306A\u308B"
   icon: {fileID: -4762150368521278425, guid: b846bcc996fea4bdc888e5e7e5d695a2, type: 3}
   effectType: 0
   areaRadius: 0

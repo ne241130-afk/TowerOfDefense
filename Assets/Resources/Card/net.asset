@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: net
   m_EditorClassIdentifier: Assembly-CSharp::CardData
   cardName: "\u30CD\u30C3\u30C8\u30E9\u30F3\u30C1\u30E3\u30FC"
-  description: "\u3044\u3063\u3066\u3044\u306F\u3093\u3044 \u306E\n\u3069\u3046\u3076\u3064\u3092
+  description: "\u3044\u3063\u3066\u3044\u306F\u3093\u3044 \u306E \u3069\u3046\u3076\u3064\u3092
     \u3064\u304B\u307E\u3048\u308B"
   icon: {fileID: 294434920142312338, guid: c06d06e8d14cc4eb29be37c88839ed00, type: 3}
   effectType: 6
