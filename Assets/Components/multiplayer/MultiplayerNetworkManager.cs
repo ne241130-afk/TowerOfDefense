@@ -406,6 +406,7 @@ public class MultiplayerNetworkManager : NetworkManager
         NetworkClient.RegisterHandler<AdvanceTurnMessage>(OnClientAdvanceTurnMessage, false);
         NetworkClient.RegisterHandler<TurnCoverStateMessage>(OnClientTurnCoverStateMessage, false);
         NetworkClient.RegisterHandler<AnimalSpawnMessage>(OnClientAnimalSpawnMessage, false);
+        NetworkClient.RegisterHandler<AnimalStateSyncMessage>(OnClientAnimalStateSyncMessage, false);
     }
 
     public override void OnStopClient()
@@ -419,6 +420,7 @@ public class MultiplayerNetworkManager : NetworkManager
         NetworkClient.UnregisterHandler<AdvanceTurnMessage>();
         NetworkClient.UnregisterHandler<TurnCoverStateMessage>();
         NetworkClient.UnregisterHandler<AnimalSpawnMessage>();
+        NetworkClient.UnregisterHandler<AnimalStateSyncMessage>();
     }
 
     public override void OnClientSceneChanged()
@@ -510,12 +512,14 @@ public class MultiplayerNetworkManager : NetworkManager
 
         bool clearSelection = MultiplayerRuntime.GetEffectiveLocalPlayerIndex() == msg.actorPlayerIndex;
         CardPlacementController.Instance.ApplyPlacementFromNetwork(card, new Vector3Int(msg.x, msg.y, msg.z), clearSelection);
+        if (NetworkServer.active) BroadcastAuthoritativeAnimalState();
     }
 
     private static void OnClientAdvanceTurnMessage(AdvanceTurnMessage _)
     {
         ApplyTurnCoverState(false, false);
         TurnManager.Instance?.AdvanceTurn();
+        if (NetworkServer.active) BroadcastAuthoritativeAnimalState();
     }
 
     private static void OnClientTurnCoverStateMessage(TurnCoverStateMessage msg)
@@ -527,7 +531,30 @@ public class MultiplayerNetworkManager : NetworkManager
     {
         // Host mode already spawned this animal locally as the server.
         if (NetworkServer.active) return;
-        AnimalSpawner.ApplyNetworkSpawn(msg.prefabName, new Vector3Int(msg.x, msg.y, msg.z));
+        AnimalSpawner.ApplyNetworkSpawn(msg.animalId, msg.prefabName, new Vector3Int(msg.x, msg.y, msg.z));
+    }
+
+    private static void OnClientAnimalStateSyncMessage(AnimalStateSyncMessage msg)
+    {
+        // The host already owns this state and must not reconcile against its own message.
+        if (NetworkServer.active) return;
+        AnimalSpawner.ApplyAuthoritativeAnimalSnapshot(msg.animalStates);
+        if (WaveManager.Instance != null)
+            WaveManager.Instance.ApplyAuthoritativeNetworkState(msg.currentWave, msg.turnInWave, msg.captureCount, msg.escapeCount);
+    }
+
+    public static void BroadcastAuthoritativeAnimalState()
+    {
+        if (!NetworkServer.active) return;
+        var wave = WaveManager.Instance;
+        NetworkServer.SendToAll(new AnimalStateSyncMessage
+        {
+            animalStates = AnimalSpawner.BuildAuthoritativeAnimalSnapshot(),
+            currentWave = wave != null ? wave.currentWave : 1,
+            turnInWave = wave != null ? wave.turnInWave : 0,
+            captureCount = wave != null ? wave.CaptureCount : 0,
+            escapeCount = wave != null ? wave.EscapeCount : 0
+        });
     }
 
     private static void ApplyTurnCoverState(bool cover0Visible, bool cover1Visible)

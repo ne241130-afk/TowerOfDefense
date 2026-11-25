@@ -297,7 +297,6 @@ public class CardDeckManager : MonoBehaviour
     /// </summary>
     public void ResetDeckAndHand()
     {
-        if (networkControlledMode) return;
         // 手札を空にする
         hand.Clear();
 

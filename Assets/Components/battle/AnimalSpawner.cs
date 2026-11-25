@@ -95,6 +95,7 @@ public class AnimalSpawner : MonoBehaviour, ITurnActor
     // randomGroups 用リトライ（セルが占有中だった場合）
     private struct PendingRandomSpawn { public GameObject prefab; public Vector3Int cell; }
     private readonly List<PendingRandomSpawn> pendingRandomRetries = new List<PendingRandomSpawn>();
+    private static int nextNetworkAnimalId = 1;
 
     private void Awake()
     {
@@ -251,12 +252,16 @@ public class AnimalSpawner : MonoBehaviour, ITurnActor
         if (AnimalOccupancyMap.Instance != null && AnimalOccupancyMap.Instance.IsOccupied(cell))
             return false; // セルが占有中 → 次ターンにリトライ
 
-        SpawnLocal(prefab, cell);
+        int animalId = MultiplayerRuntime.IsMultiplayerSession && NetworkServer.active
+            ? nextNetworkAnimalId++
+            : 0;
+        SpawnLocal(prefab, cell, animalId);
 
         if (MultiplayerRuntime.IsMultiplayerSession && NetworkServer.active)
         {
             NetworkServer.SendToAll(new AnimalSpawnMessage
             {
+                animalId = animalId,
                 prefabName = prefab.name,
                 x = cell.x,
                 y = cell.y,
@@ -268,7 +273,7 @@ public class AnimalSpawner : MonoBehaviour, ITurnActor
         return true;
     }
 
-    private void SpawnLocal(GameObject prefab, Vector3Int cell)
+    private void SpawnLocal(GameObject prefab, Vector3Int cell, int animalId)
     {
         Vector3 worldPos = FieldGridConfig.Instance.grid.GetCellCenterWorld(cell);
         GameObject obj = Instantiate(prefab, worldPos, Quaternion.identity);
@@ -278,9 +283,11 @@ public class AnimalSpawner : MonoBehaviour, ITurnActor
         var controller = obj.GetComponent<AnimalController>();
         if (controller != null && AnimalOccupancyMap.Instance != null)
             AnimalOccupancyMap.Instance.SetOccupied(cell, controller);
+        if (controller != null)
+            controller.SetNetworkIdentity(animalId, prefab.name);
     }
 
-    public static void ApplyNetworkSpawn(string prefabName, Vector3Int cell)
+    public static void ApplyNetworkSpawn(int animalId, string prefabName, Vector3Int cell)
     {
         if (string.IsNullOrEmpty(prefabName)) return;
         foreach (var spawner in All)
@@ -289,10 +296,75 @@ public class AnimalSpawner : MonoBehaviour, ITurnActor
             GameObject prefab = spawner.ResolvePrefab(prefabName);
             if (prefab == null) continue;
             if (FieldGridConfig.Instance == null || FieldGridConfig.Instance.grid == null) return;
-            spawner.SpawnLocal(prefab, cell);
+            nextNetworkAnimalId = Mathf.Max(nextNetworkAnimalId, animalId + 1);
+            spawner.SpawnLocal(prefab, cell, animalId);
             return;
         }
         Debug.LogWarning($"AnimalSpawner: received unknown animal prefab '{prefabName}'.");
+    }
+
+    public static string BuildAuthoritativeAnimalSnapshot()
+    {
+        var entries = new List<string>();
+        foreach (var animal in FindObjectsByType<AnimalController>(FindObjectsSortMode.None))
+        {
+            if (animal == null || animal.NetworkAnimalId <= 0 || string.IsNullOrEmpty(animal.NetworkPrefabName)) continue;
+            Vector3Int cell = animal.CurrentCell;
+            entries.Add($"{animal.NetworkAnimalId},{animal.NetworkPrefabName},{cell.x},{cell.y},{cell.z},{animal.CaptureHits}");
+        }
+        return string.Join("|", entries);
+    }
+
+    public static void ApplyAuthoritativeAnimalSnapshot(string snapshot)
+    {
+        var records = new Dictionary<int, string[]>();
+        if (!string.IsNullOrEmpty(snapshot))
+        {
+            foreach (string entry in snapshot.Split('|'))
+            {
+                string[] fields = entry.Split(',');
+                if (fields.Length != 6 || !int.TryParse(fields[0], out int id) || id <= 0) continue;
+                records[id] = fields;
+            }
+        }
+
+        var localAnimals = FindObjectsByType<AnimalController>(FindObjectsSortMode.None);
+        foreach (var animal in localAnimals)
+        {
+            if (animal != null && animal.NetworkAnimalId > 0 && !records.ContainsKey(animal.NetworkAnimalId))
+                Destroy(animal.gameObject);
+        }
+
+        foreach (var pair in records)
+        {
+            string[] fields = pair.Value;
+            if (!int.TryParse(fields[2], out int x) || !int.TryParse(fields[3], out int y) ||
+                !int.TryParse(fields[4], out int z) || !int.TryParse(fields[5], out int hits)) continue;
+            AnimalController animal = null;
+            foreach (var existing in localAnimals)
+                if (existing != null && existing.NetworkAnimalId == pair.Key) { animal = existing; break; }
+
+            if (animal == null)
+            {
+                foreach (var spawner in All)
+                {
+                    if (spawner == null) continue;
+                    GameObject prefab = spawner.ResolvePrefab(fields[1]);
+                    if (prefab == null) continue;
+                    nextNetworkAnimalId = Mathf.Max(nextNetworkAnimalId, pair.Key + 1);
+                    spawner.SpawnLocal(prefab, new Vector3Int(x, y, z), pair.Key);
+                    foreach (var candidate in FindObjectsByType<AnimalController>(FindObjectsSortMode.None))
+                    {
+                        if (candidate == null || candidate.NetworkAnimalId != pair.Key) continue;
+                        animal = candidate;
+                        break;
+                    }
+                    break;
+                }
+            }
+
+            animal?.ApplyAuthoritativeState(new Vector3Int(x, y, z), hits);
+        }
     }
 
     private GameObject ResolvePrefab(string prefabName)

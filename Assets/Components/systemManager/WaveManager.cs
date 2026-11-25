@@ -19,6 +19,7 @@ public class WaveManager : MonoBehaviour, ITurnActor
     private int captureCount = 0; /// 
     private int escapeCount = 0; /// 脱走数
     public int EscapeCount => escapeCount;
+    public int CaptureCount => captureCount;
 
     [Header("イベント（Inspector で UI 等を登録）")]
     public UnityEvent<int> OnWaveStarted;
@@ -54,6 +55,7 @@ public class WaveManager : MonoBehaviour, ITurnActor
 
     public void AddCapture()
     {
+        if (MultiplayerRuntime.IsMultiplayerSession && !Mirror.NetworkServer.active) return;
         captureCount++;
 
         CheckWaveClear();
@@ -61,6 +63,7 @@ public class WaveManager : MonoBehaviour, ITurnActor
 
     public void AddEscape()
     {
+        if (MultiplayerRuntime.IsMultiplayerSession && !Mirror.NetworkServer.active) return;
         escapeCount++;
 
         Debug.Log($"脱走数: {escapeCount}");
@@ -80,10 +83,26 @@ public class WaveManager : MonoBehaviour, ITurnActor
 
     public void OnTurnTick()
     {
+        if (MultiplayerRuntime.IsMultiplayerSession && !Mirror.NetworkServer.active) return;
         turnInWave++;
         Debug.Log("WaveManager: ターン " + turnInWave + " / " + turnsPerWave);
         OnTurnChanged?.Invoke(turnInWave);
         CheckWaveClear();
+    }
+
+    public void ApplyAuthoritativeNetworkState(int wave, int turn, int captures, int escapes)
+    {
+        int authoritativeWave = Mathf.Max(1, wave);
+        bool waveChanged = currentWave != authoritativeWave;
+        if (waveChanged && authoritativeWave % 5 == 0)
+            CardPlacementController.Instance?.ClearPlacedBoardItems();
+
+        currentWave = authoritativeWave;
+        turnInWave = Mathf.Max(0, turn);
+        captureCount = Mathf.Max(0, captures);
+        escapeCount = Mathf.Max(0, escapes);
+        if (waveChanged) OnWaveStarted?.Invoke(currentWave);
+        OnTurnChanged?.Invoke(turnInWave);
     }
 
     public void ResetState(int startWave = 1)

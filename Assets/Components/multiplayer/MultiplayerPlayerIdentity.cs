@@ -180,6 +180,12 @@ public class MultiplayerPlayerIdentity : NetworkBehaviour
     }
 
     [Command]
+    public void CmdRequestAnimalIntimidation(int animalId)
+    {
+        MultiplayerMatchCoordinator.Instance?.ServerHandleAnimalIntimidation(this, animalId);
+    }
+
+    [Command]
     public void CmdRequestGameOver()
     {
         MultiplayerNetworkManager.Instance?.ServerTransitionToGameOver();

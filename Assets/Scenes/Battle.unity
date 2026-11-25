@@ -1553,7 +1553,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 60
+  orthographic size: 75
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -1928,6 +1928,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TurnManager
   autoTurnInterval: 0
+  timeTurnInterval: 1
 --- !u!114 &567539162
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19261,26 +19262,26 @@ MonoBehaviour:
   deck:
   - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
   - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
-  - {fileID: 11400000, guid: 714c48c5d717a42638dc44eda4989188, type: 2}
-  - {fileID: 11400000, guid: 714c48c5d717a42638dc44eda4989188, type: 2}
+  - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
+  - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
   - {fileID: 11400000, guid: b0ce903f97522437ba1a7c365f90e7bf, type: 2}
   - {fileID: 11400000, guid: b0ce903f97522437ba1a7c365f90e7bf, type: 2}
+  - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
   - {fileID: 11400000, guid: b51a238a425444620b5509277c63bf20, type: 2}
-  - {fileID: 11400000, guid: b51a238a425444620b5509277c63bf20, type: 2}
-  - {fileID: 11400000, guid: b51a238a425444620b5509277c63bf20, type: 2}
-  - {fileID: 11400000, guid: b51a238a425444620b5509277c63bf20, type: 2}
+  - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
+  - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
   - {fileID: 11400000, guid: fda066936d77e4e5eacd9a45647c3427, type: 2}
   - {fileID: 11400000, guid: fda066936d77e4e5eacd9a45647c3427, type: 2}
-  - {fileID: 11400000, guid: b9f9f6d0be1364bf187b586f8b89b1c3, type: 2}
+  - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
   - {fileID: 11400000, guid: 84f4651d4e7a84ff4a8e367498b2336b, type: 2}
   - {fileID: 11400000, guid: 9c7aca9523c064b38aeeae384b2295bf, type: 2}
   - {fileID: 11400000, guid: 9c7aca9523c064b38aeeae384b2295bf, type: 2}
-  - {fileID: 11400000, guid: b51a238a425444620b5509277c63bf20, type: 2}
+  - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
   - {fileID: 11400000, guid: 8504b4edf88cf468f843ab2cc146b665, type: 2}
   - {fileID: 11400000, guid: 8504b4edf88cf468f843ab2cc146b665, type: 2}
-  - {fileID: 11400000, guid: b9f9f6d0be1364bf187b586f8b89b1c3, type: 2}
-  - {fileID: 11400000, guid: b9f9f6d0be1364bf187b586f8b89b1c3, type: 2}
-  - {fileID: 11400000, guid: b9f9f6d0be1364bf187b586f8b89b1c3, type: 2}
+  - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
+  - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
+  - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
   - {fileID: 11400000, guid: fda066936d77e4e5eacd9a45647c3427, type: 2}
   - {fileID: 11400000, guid: fda066936d77e4e5eacd9a45647c3427, type: 2}
   - {fileID: 11400000, guid: fda066936d77e4e5eacd9a45647c3427, type: 2}

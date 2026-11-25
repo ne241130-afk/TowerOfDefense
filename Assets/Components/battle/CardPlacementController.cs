@@ -845,7 +845,14 @@ public class CardPlacementController : MonoBehaviour
     /// </summary>
     private void PlaceNetLauncher(Vector3Int center)
     {
-        var cells = EffectAreaUtility.GetSquareArea(center, selectedCard.areaRadius);
+        CardData usedCard = selectedCard;
+        CardSlotUI usedSlot = selectedSlot;
+        if (usedCard == null) return;
+
+        var cells = EffectAreaUtility.GetSquareArea(center, usedCard.areaRadius);
+        GameObject visualPrefab = usedCard.placedVisualPrefab != null
+            ? usedCard.placedVisualPrefab
+            : defaultPlacedEffectVisualPrefab;
 
         int captured = 0;
         //HP 捕獲耐久値
@@ -874,9 +881,6 @@ public class CardPlacementController : MonoBehaviour
         Debug.Log($"[NetLauncher]捕獲判定 {hitCount} 体、 今回の捕獲成功 {captured} 体。");
 
         // ビジュアルエフェクトを範囲中心に生成(設定されていれば)
-        GameObject visualPrefab = selectedCard.placedVisualPrefab != null
-            ? selectedCard.placedVisualPrefab
-            : defaultPlacedEffectVisualPrefab;
         if (visualPrefab != null)
         {
             Vector3 worldPos = FieldGridConfig.Instance.grid.GetCellCenterWorld(center);
@@ -884,7 +888,7 @@ public class CardPlacementController : MonoBehaviour
             RegisterPlacedBoardObject(placedVisual);
         }
 
-        ConsumeSelectedCardIfNeeded();
+        if (!suppressEconomyAndConsume) usedSlot?.ConsumeCard();
         ClearSelectionIfNeeded();
         AdvanceTurnIfNeeded();
     }

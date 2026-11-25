@@ -327,6 +327,21 @@ public class IntimidateActionController : MonoBehaviour
             }
         }
 
+        if (MultiplayerRuntime.IsMultiplayerSession)
+        {
+            MultiplayerPlayerIdentity identity = MultiplayerRuntime.LocalPlayerIdentity;
+            if (identity == null || animal.NetworkAnimalId <= 0)
+            {
+                Debug.LogWarning("威嚇: マルチプレイの動物同期情報がありません。");
+                return;
+            }
+
+            identity.CmdRequestAnimalIntimidation(animal.NetworkAnimalId);
+            CancelAiming();
+            RefreshButtonState();
+            return;
+        }
+
         if (!animal.TryMoveToCell(retreatCell))
         {
             Debug.LogWarning("威嚇: 後退先への移動に失敗しました。");

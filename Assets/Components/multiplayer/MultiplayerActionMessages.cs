@@ -56,10 +56,21 @@ public struct TurnCoverStateMessage : NetworkMessage
 
 public struct AnimalSpawnMessage : NetworkMessage
 {
+    public int animalId;
     public string prefabName;
     public int x;
     public int y;
     public int z;
+}
+
+public struct AnimalStateSyncMessage : NetworkMessage
+{
+    // Each entry: id,prefabName,x,y,z,captureHits; entries separated by '|'.
+    public string animalStates;
+    public int currentWave;
+    public int turnInWave;
+    public int captureCount;
+    public int escapeCount;
 }
 
 public static class MultiplayerActionClient

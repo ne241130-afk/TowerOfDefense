@@ -17,6 +17,9 @@ public class AnimalController : MonoBehaviour, ITurnActor
 
     public AnimalStats Stats => stats;
     public Vector3Int CurrentCell { get; private set; }
+    public int NetworkAnimalId { get; private set; }
+    public string NetworkPrefabName { get; private set; } = string.Empty;
+    public int CaptureHits => captureHits;
 
     // 足止め残りターン数(沼地・鎖などから加算される)
     private int moveDelayTurns = 0;
@@ -160,6 +163,10 @@ public class AnimalController : MonoBehaviour, ITurnActor
 
     public void OnTurnTick()
     {
+        // Animal AI is authoritative on the multiplayer host. Remote clients
+        // only apply the resulting state snapshot to avoid local divergence.
+        if (MultiplayerRuntime.IsMultiplayerSession && !Mirror.NetworkServer.active) return;
+
         if (skipMoveThisTurn)
         {
             skipMoveThisTurn = false;
@@ -184,6 +191,30 @@ public class AnimalController : MonoBehaviour, ITurnActor
         turnCounter = 0;
 
         Move();
+    }
+
+    public void SetNetworkIdentity(int animalId, string prefabName)
+    {
+        NetworkAnimalId = animalId;
+        NetworkPrefabName = prefabName ?? string.Empty;
+        if (FieldGridConfig.Instance != null && FieldGridConfig.Instance.grid != null)
+            CurrentCell = FieldGridConfig.Instance.grid.WorldToCell(transform.position);
+    }
+
+    public void ApplyAuthoritativeState(Vector3Int cell, int hits)
+    {
+        if (FieldGridConfig.Instance == null || FieldGridConfig.Instance.grid == null) return;
+        if (AnimalOccupancyMap.Instance != null)
+        {
+            AnimalOccupancyMap.Instance.ClearOccupied(CurrentCell, this);
+            CurrentCell = cell;
+            AnimalOccupancyMap.Instance.SetOccupied(CurrentCell, this);
+        }
+        else CurrentCell = cell;
+        transform.position = FieldGridConfig.Instance.grid.GetCellCenterWorld(cell);
+        captureHits = Mathf.Max(0, hits);
+        if (hpBarInstance != null)
+            hpBarInstance.UpdateHP(captureHits, Mathf.Max(1, stats.captureHitsRequired));
     }
 
     public bool TryGetPlannedPath(out List<Vector3Int> path)

@@ -88,12 +88,15 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
     public override void OnStartServer()
     {
         base.OnStartServer();
+        SubscribeToWaveCompletion();
         InitializeServerState();
     }
 
     public override void OnStopServer()
     {
         StopTimeTurn();
+        if (WaveManager.Instance != null)
+            WaveManager.Instance.OnWaveCompleted.RemoveListener(OnServerWaveCompleted);
         base.OnStopServer();
     }
 
@@ -125,6 +128,8 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
     private void InitializeServerState()
     {
         if (serverInitialized && matchReady) return;
+
+        SubscribeToWaveCompletion();
 
         MultiplayerCardCatalog.EnsureInitialized();
 
@@ -212,6 +217,43 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
         serverInitialized = true;
         matchReady = true;
         Debug.Log($"[TRACE][ServerInit] ready p0Money={player0Money} p1Money={player1Money}");
+    }
+
+    [Server]
+    private void SubscribeToWaveCompletion()
+    {
+        if (WaveManager.Instance == null) return;
+        WaveManager.Instance.OnWaveCompleted.RemoveListener(OnServerWaveCompleted);
+        WaveManager.Instance.OnWaveCompleted.AddListener(OnServerWaveCompleted);
+    }
+
+    [Server]
+    private void OnServerWaveCompleted(int completedWave)
+    {
+        if (completedWave <= 0 || completedWave % 5 != 0) return;
+
+        CardDeckManager deckManager = CardDeckManager.Instance;
+        foreach (var pair in playerStates)
+        {
+            if (pair.Value == null) continue;
+            int currentMoney = pair.Value.money;
+            ServerPlayerState refreshed = BuildInitialState(pair.Key, deckManager);
+
+            pair.Value.deck.Clear();
+            pair.Value.deck.AddRange(refreshed.deck);
+            pair.Value.hand.Clear();
+            pair.Value.hand.AddRange(refreshed.hand);
+            pair.Value.money = currentMoney;
+
+            SetPublicStateFromServer(pair.Key, pair.Value);
+            if (playerByIndex.TryGetValue(pair.Key, out MultiplayerPlayerIdentity identity))
+                TrySendPrivateState(identity, pair.Value);
+        }
+
+        reloadedThisRound[0] = false;
+        reloadedThisRound[1] = false;
+        TryBroadcastHandsToClients();
+        Debug.Log($"[TRACE][ServerDeck] restored both player decks after Wave{completedWave}");
     }
 
     [Server]
@@ -433,6 +475,25 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
     public void ServerResetTimeTurn()
     {
         StopTimeTurn();
+    }
+
+    [Server]
+    public void ServerHandleAnimalIntimidation(MultiplayerPlayerIdentity sender, int animalId)
+    {
+        if (sender == null || !matchReady || animalId <= 0 || IsPlayerAlreadyEnded(sender.PlayerIndex)) return;
+        AnimalController target = null;
+        foreach (var animal in FindObjectsByType<AnimalController>(FindObjectsSortMode.None))
+            if (animal != null && animal.NetworkAnimalId == animalId) { target = animal; break; }
+
+        if (target == null || !target.TryGetRetreatCell(out Vector3Int retreatCell) || !target.TryMoveToCell(retreatCell))
+        {
+            TrySendStatus(sender, "Intimidation failed: animal cannot retreat");
+            return;
+        }
+
+        target.ApplyIntimidationForNextTurn();
+        MultiplayerNetworkManager.BroadcastAuthoritativeAnimalState();
+        ServerHandleSkipTurn(sender);
     }
 
     [Server]
