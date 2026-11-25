@@ -19854,7 +19854,7 @@ Transform:
   m_GameObject: {fileID: 969971892}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -128, y: -25.4, z: 0}
+  m_LocalPosition: {x: -126, y: -25.4, z: 0}
   m_LocalScale: {x: 1.1, y: 1.1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -20234,8 +20234,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 1400, y: -122}
-  m_SizeDelta: {x: 943.8, y: 195.956}
+  m_AnchoredPosition: {x: 1125, y: -170}
+  m_SizeDelta: {x: 450, y: 195.956}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1032001445
 MonoBehaviour:
@@ -20270,9 +20270,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "wave20\u307E\u3067 \u3069\u3046\u3076\u3064 \u306E \n\u3060\u3063\u305D\u3046
+  m_Text: "wave20\u307E\u3067 \u3069\u3046\u3076\u3064 \u306E \u3060\u3063\u305D\u3046
     \u3092 \u305D\u3057 \u3057\u3088\u3046\uFF01\n\n\u3069\u3046\u3076\u3064 \u304C
-    5\u3072\u304D \n\u306B\u3052\u305F\u3089 \u307E\u3051\uFF01\n\n\u306B\u3052\u305F\uFF1A0/5"
+    5\u3072\u304D \u306B\u3052\u305F\u3089 \u307E\u3051\uFF01\n\n\u306B\u3052\u305F\uFF1A0/5"
 --- !u!222 &1032001446
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -20374,7 +20374,7 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 12800000, guid: c971b3e238b2245d189244b741c425d1, type: 3}
-    m_FontSize: 30
+    m_FontSize: 25
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 0
@@ -20385,7 +20385,8 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u30AB\u30FC\u30C9\u3092\u9078\u629E\u3059\u308B\u3068\n\u3053\u3053\u306B\u8AAC\u660E\u304C\u8868\u793A\u3055\u308C\u307E\u3059"
+  m_Text: "\u30AB\u30FC\u30C9 \u3092 \u3048\u3089\u3076 \u3068\n\u3053\u3053\u306B
+    \u305B\u3064\u3081\u3044 \u304C \u3067\u308B\u3088"
 --- !u!222 &1085120191
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -36582,7 +36583,7 @@ Transform:
   m_GameObject: {fileID: 1522632519}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -69.5, y: -56.1, z: 0}
+  m_LocalPosition: {x: -71, y: -56.1, z: 0}
   m_LocalScale: {x: 1.1, y: 1.1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
