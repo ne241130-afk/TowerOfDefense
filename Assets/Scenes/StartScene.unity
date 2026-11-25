@@ -1164,7 +1164,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 475, y: 400}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1038328853
@@ -1197,7 +1197,7 @@ MonoBehaviour:
   m_fontColor32:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -2357,6 +2357,7 @@ MonoBehaviour:
   pageImage: {fileID: 1809739973}
   pageNumberText: {fileID: 1038328853}
   pages:
+  - {fileID: -6957759411244772590, guid: 82565bb4fff264f10845445d61388dd5, type: 3}
   - {fileID: 3241293359245326201, guid: 53b22b297efee4407a6f620fe7ee8946, type: 3}
   - {fileID: -5670881572914161600, guid: 49725a63b74e64a5eb77b962a5456cac, type: 3}
   - {fileID: -6621304728671135691, guid: fae5880473dba42fd9a3776b6dfae740, type: 3}

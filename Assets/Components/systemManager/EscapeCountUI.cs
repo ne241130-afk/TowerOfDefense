@@ -10,12 +10,8 @@ public class EscapeCountUI : MonoBehaviour
         if (WaveManager.Instance == null) return;
 
         escapeCountText.text =
-            "wave20まで\n" +
-            "動物の脱走を\n" +
-            "阻止しよう！\n\n" +
-            "動物が5匹\n" +
-            "脱走したら\n" +
-            "負け！\n\n" +
-            "脱走数：" + WaveManager.Instance.EscapeCount + "/5";
+            "wave20まで どうぶつ の だっそう を そししよう！\n" +
+            "どうぶつ が 5ひき にげたら まけ！\n" +
+            "にげた：" + WaveManager.Instance.EscapeCount + "/5";
     }
 }
