@@ -129,23 +129,8 @@ public static class MultiplayerRuntime
 
     public static bool IsPointerInsideOwnHalf()
     {
-        if (!IsMultiplayerSession) return true;
-
-        int playerIndex = GetEffectiveLocalPlayerIndex();
-        if (playerIndex < 0)
-        {
-            // Do not allow full-board placement while the local player index is still unresolved.
-            return false;
-        }
-
-        float normalized = Screen.width > 0 ? Input.mousePosition.x / Screen.width : 0.5f;
-        if (playerIndex == 0)
-        {
-            // Host(Player0) controls RIGHT side.
-            return normalized >= 0.5f;
-        }
-
-        // Guest(Player1) controls LEFT side.
-        return normalized < 0.5f;
+        // Both players may place cards anywhere on the board. Player identity and
+        // card ownership are validated separately by the multiplayer server.
+        return true;
     }
 }
