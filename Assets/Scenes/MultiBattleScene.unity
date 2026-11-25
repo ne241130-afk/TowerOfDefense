@@ -2276,7 +2276,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EconomyManager
   startingMoney: 500
-  incomePerTurn: 10
+  incomePerTurn: 20
   currentMoney: 0
   OnMoneyChanged:
     m_PersistentCalls:
@@ -20465,9 +20465,9 @@ MonoBehaviour:
   deck:
   - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
   - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
-  - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
-  - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
-  - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
+  - {fileID: 11400000, guid: 84f4651d4e7a84ff4a8e367498b2336b, type: 2}
+  - {fileID: 11400000, guid: 84f4651d4e7a84ff4a8e367498b2336b, type: 2}
+  - {fileID: 11400000, guid: 84f4651d4e7a84ff4a8e367498b2336b, type: 2}
   - {fileID: 11400000, guid: b0ce903f97522437ba1a7c365f90e7bf, type: 2}
   - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
   - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
