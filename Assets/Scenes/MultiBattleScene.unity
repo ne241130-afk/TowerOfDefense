@@ -2866,7 +2866,7 @@ MonoBehaviour:
     - {x: -12, y: -2, z: 0}
   - wave: 1
     waveEnd: 4
-    turnsPerSpawn: 4
+    turnsPerSpawn: 5
     animalPrefabs:
     - {fileID: 6461936735922963314, guid: 4829df9a63d0d48faac3a01c57dff35d, type: 3}
     - {fileID: 2599670119332685034, guid: 5184a845c33e74a73b5544f12e8a01f3, type: 3}
@@ -2878,6 +2878,7 @@ MonoBehaviour:
     - {fileID: 2599670119332685034, guid: 774637304d3ad41a8b5dd132baf754a5, type: 3}
     spawnCells:
     - {x: 0, y: -2, z: 0}
+    - {x: -10, y: -2, z: 0}
   - wave: 5
     waveEnd: 9
     turnsPerSpawn: 3
@@ -2906,8 +2907,8 @@ MonoBehaviour:
     - {fileID: 2599670119332685034, guid: 9d6a19be25d524d2089963d4d0f17c3d, type: 3}
     - {fileID: 2599670119332685034, guid: 774637304d3ad41a8b5dd132baf754a5, type: 3}
     spawnCells:
-    - {x: -4, y: -5, z: 0}
-    - {x: 4, y: -7, z: 0}
+    - {x: -8, y: -5, z: 0}
+    - {x: 2, y: -7, z: 0}
   - wave: 15
     waveEnd: 20
     turnsPerSpawn: 2
@@ -2923,7 +2924,7 @@ MonoBehaviour:
     spawnCells:
     - {x: -4, y: -5, z: 0}
     - {x: 4, y: -7, z: 0}
-    - {x: -4, y: -8, z: 0}
+    - {x: -12, y: -8, z: 0}
 --- !u!4 &625395892
 Transform:
   m_ObjectHideFlags: 0
@@ -20463,7 +20464,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CardDeckManager
   deck:
-  - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
+  - {fileID: 11400000, guid: 9c7aca9523c064b38aeeae384b2295bf, type: 2}
   - {fileID: 11400000, guid: 3fbc94da07e3e497a98821b689710c0b, type: 2}
   - {fileID: 11400000, guid: 84f4651d4e7a84ff4a8e367498b2336b, type: 2}
   - {fileID: 11400000, guid: 84f4651d4e7a84ff4a8e367498b2336b, type: 2}
