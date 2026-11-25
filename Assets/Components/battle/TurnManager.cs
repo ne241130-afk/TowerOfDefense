@@ -22,6 +22,11 @@ public class TurnManager : MonoBehaviour
     [Tooltip("AdvanceTurnを自動で呼ぶ場合の間隔(秒)。0以下なら自動実行しない。")]
     public float autoTurnInterval = 0f;
 
+    [SerializeField, Min(0.1f)] private float timeTurnInterval = 1f;
+
+    public bool IsTimeTurnEnabled { get; private set; }
+    public float TimeTurnInterval => Mathf.Max(0.1f, timeTurnInterval);
+
     private readonly List<ITurnActor> actors = new List<ITurnActor>();
     private float autoTimer = 0f;
 
@@ -39,13 +44,14 @@ public class TurnManager : MonoBehaviour
 
     private void Update()
     {
-        if (autoTurnInterval <= 0f) return;
+        if (!IsTimeTurnEnabled && autoTurnInterval <= 0f) return;
 
         autoTimer += Time.deltaTime;
-        if (autoTimer >= autoTurnInterval)
+        float interval = IsTimeTurnEnabled ? Mathf.Max(0.1f, timeTurnInterval) : autoTurnInterval;
+        if (autoTimer >= interval)
         {
-            autoTimer -= autoTurnInterval;
-            AdvanceTurn();
+            autoTimer = 0f;
+            AdvanceTurn(IsTimeTurnEnabled);
         }
     }
 
@@ -63,8 +69,20 @@ public class TurnManager : MonoBehaviour
     /// 1ターン進める。登録されている全アクターのOnTurnTickを呼ぶ。
     /// ターン中に動物が捕獲されてUnregisterされても安全なようスナップショットを取る。
     /// </summary>
+    public void SetTimeTurnEnabled(bool enabled)
+    {
+        IsTimeTurnEnabled = enabled;
+        autoTimer = 0f;
+    }
+
     public void AdvanceTurn()
     {
+        AdvanceTurn(false);
+    }
+
+    private void AdvanceTurn(bool fromTimeTurn)
+    {
+        if (IsTimeTurnEnabled && !fromTimeTurn) return;
         CurrentTurn++;
 
         var snapshot = new List<ITurnActor>(actors);

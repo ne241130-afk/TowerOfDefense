@@ -54,6 +54,14 @@ public struct TurnCoverStateMessage : NetworkMessage
     public bool cover1Visible;
 }
 
+public struct AnimalSpawnMessage : NetworkMessage
+{
+    public string prefabName;
+    public int x;
+    public int y;
+    public int z;
+}
+
 public static class MultiplayerActionClient
 {
     public static bool TrySendPlaceCard(string cardId, int handIndex, Vector3Int cell, out string reason)

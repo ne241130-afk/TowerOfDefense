@@ -22,6 +22,15 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
     [SyncVar(hook = nameof(OnMatchReadyChanged))]
     private bool matchReady;
 
+    [SyncVar] private bool timeReady0;
+    [SyncVar] private bool timeReady1;
+    [SyncVar] private bool timeTurnActive;
+    private Coroutine timeTurnCoroutine;
+
+    public bool TimeReady0 => timeReady0;
+    public bool TimeReady1 => timeReady1;
+    public bool TimeTurnActive => timeTurnActive;
+
     [SyncVar(hook = nameof(OnPublicValueChanged))] private int player0Money;
     [SyncVar(hook = nameof(OnPublicValueChanged))] private int player1Money;
     [SyncVar(hook = nameof(OnPublicValueChanged))] private int player0HandCount;
@@ -84,6 +93,7 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
 
     public override void OnStopServer()
     {
+        StopTimeTurn();
         base.OnStopServer();
     }
 
@@ -400,6 +410,63 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
     }
 
     [Server]
+    public void ServerToggleTimeTurnReady(MultiplayerPlayerIdentity sender)
+    {
+        if (sender == null || !matchReady || sender.PlayerIndex < 0 || sender.PlayerIndex > 1) return;
+        if (timeTurnActive)
+        {
+            StopTimeTurn();
+            return;
+        }
+
+        if (sender.PlayerIndex == 0) timeReady0 = !timeReady0;
+        else timeReady1 = !timeReady1;
+
+        if (timeReady0 && timeReady1)
+        {
+            timeTurnActive = true;
+            timeTurnCoroutine = StartCoroutine(TimeTurnLoop());
+        }
+    }
+
+    [Server]
+    public void ServerResetTimeTurn()
+    {
+        StopTimeTurn();
+    }
+
+    [Server]
+    private System.Collections.IEnumerator TimeTurnLoop()
+    {
+        while (timeTurnActive)
+        {
+            float interval = TurnManager.Instance != null ? TurnManager.Instance.TimeTurnInterval : 1f;
+            yield return new WaitForSeconds(interval);
+            if (!timeTurnActive) yield break;
+            endedThisRound[0] = false;
+            endedThisRound[1] = false;
+            MarkPlayerEnded(0, true);
+            MarkPlayerEnded(1, true);
+        }
+    }
+
+    [Server]
+    private void StopTimeTurn()
+    {
+        timeTurnActive = false;
+        timeReady0 = false;
+        timeReady1 = false;
+        if (timeTurnCoroutine != null)
+        {
+            StopCoroutine(timeTurnCoroutine);
+            timeTurnCoroutine = null;
+        }
+        endedThisRound[0] = false;
+        endedThisRound[1] = false;
+        TryBroadcastTurnCoverState(false, false);
+    }
+
+    [Server]
     public void ServerHandleReloadHand(MultiplayerPlayerIdentity sender)
     {
         EnsureServerStateReady();
@@ -486,9 +553,13 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
     }
 
     [Server]
-    private void MarkPlayerEnded(int playerIndex)
+    private void MarkPlayerEnded(int playerIndex, bool fromTimeTurn = false)
     {
         if (playerIndex < 0 || playerIndex >= endedThisRound.Length) return;
+
+        // During time mode, ignore player-triggered round advancement while
+        // still allowing the server timer to submit both players' turn ends.
+        if (timeTurnActive && !fromTimeTurn) return;
 
         endedThisRound[playerIndex] = true;
 

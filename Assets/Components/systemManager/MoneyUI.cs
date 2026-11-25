@@ -105,6 +105,18 @@ public class MoneyUI : MonoBehaviour
 
     private void RefreshFromServerState()
     {
+        // Solo play has no network coordinator. Read the local economy directly so
+        // OnMoneyChanged can refresh the UI without depending on multiplayer state.
+        if (!MultiplayerRuntime.IsMultiplayerSession)
+        {
+            if (economyManager != null)
+            {
+                UpdateDisplay(economyManager.CurrentMoney);
+                previousMoney = economyManager.CurrentMoney;
+            }
+            return;
+        }
+
         if (MultiplayerMatchCoordinator.Instance == null)
         {
             return;

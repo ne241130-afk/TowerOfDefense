@@ -78,7 +78,7 @@ namespace Mirror
 
         public static void AddPlayerForConnection(NetworkConnectionToClient conn, GameObject player)
         {
-            if (conn == null || player == null) return;
+            if (conn == null || p== null) return;
             conn.identity = player.GetComponent<NetworkIdentity>();
         }
     }

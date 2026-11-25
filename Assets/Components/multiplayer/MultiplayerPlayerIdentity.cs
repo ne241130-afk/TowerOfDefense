@@ -174,6 +174,12 @@ public class MultiplayerPlayerIdentity : NetworkBehaviour
     }
 
     [Command]
+    public void CmdToggleTimeTurnReady()
+    {
+        MultiplayerMatchCoordinator.Instance?.ServerToggleTimeTurnReady(this);
+    }
+
+    [Command]
     public void CmdRequestGameOver()
     {
         MultiplayerNetworkManager.Instance?.ServerTransitionToGameOver();

@@ -405,6 +405,7 @@ public class MultiplayerNetworkManager : NetworkManager
         NetworkClient.RegisterHandler<PlacementAppliedMessage>(OnClientPlacementAppliedMessage, false);
         NetworkClient.RegisterHandler<AdvanceTurnMessage>(OnClientAdvanceTurnMessage, false);
         NetworkClient.RegisterHandler<TurnCoverStateMessage>(OnClientTurnCoverStateMessage, false);
+        NetworkClient.RegisterHandler<AnimalSpawnMessage>(OnClientAnimalSpawnMessage, false);
     }
 
     public override void OnStopClient()
@@ -417,6 +418,7 @@ public class MultiplayerNetworkManager : NetworkManager
         NetworkClient.UnregisterHandler<PlacementAppliedMessage>();
         NetworkClient.UnregisterHandler<AdvanceTurnMessage>();
         NetworkClient.UnregisterHandler<TurnCoverStateMessage>();
+        NetworkClient.UnregisterHandler<AnimalSpawnMessage>();
     }
 
     public override void OnClientSceneChanged()
@@ -519,6 +521,13 @@ public class MultiplayerNetworkManager : NetworkManager
     private static void OnClientTurnCoverStateMessage(TurnCoverStateMessage msg)
     {
         ApplyTurnCoverState(msg.cover0Visible, msg.cover1Visible);
+    }
+
+    private static void OnClientAnimalSpawnMessage(AnimalSpawnMessage msg)
+    {
+        // Host mode already spawned this animal locally as the server.
+        if (NetworkServer.active) return;
+        AnimalSpawner.ApplyNetworkSpawn(msg.prefabName, new Vector3Int(msg.x, msg.y, msg.z));
     }
 
     private static void ApplyTurnCoverState(bool cover0Visible, bool cover1Visible)

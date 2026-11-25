@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd9b3e15b302c4c94b050aa55bf71b03, type: 3}
   m_Name: CommonBgmSettings
   m_EditorClassIdentifier: 
-  bgmClip: {fileID: 8300000, guid: 764a179d41d504d1a8816e56ef4ccfe3, type: 3}
+  bgmClip: {fileID: 8300000, guid: b23a6ca2f420d4674b2f5ec364c4f952, type: 3}
   volume: 1
   loop: 1
   playableSceneNames:

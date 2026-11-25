@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Mirror;
 using UnityEngine;
 
 /// <summary>
@@ -139,6 +140,10 @@ public class AnimalSpawner : MonoBehaviour, ITurnActor
 
     public void OnTurnTick()
     {
+        // In multiplayer, the server makes the random spawn decision once and
+        // broadcasts the resulting prefab and cell to every client.
+        if (MultiplayerRuntime.IsMultiplayerSession && !NetworkServer.active) return;
+
         myTurnInWave++;
 
         // ── schedule のリトライ ──
@@ -246,16 +251,61 @@ public class AnimalSpawner : MonoBehaviour, ITurnActor
         if (AnimalOccupancyMap.Instance != null && AnimalOccupancyMap.Instance.IsOccupied(cell))
             return false; // セルが占有中 → 次ターンにリトライ
 
-        Vector3 worldPos = FieldGridConfig.Instance.grid.GetCellCenterWorld(cell);
-        GameObject obj = Instantiate(prefab, worldPos, Quaternion.identity);
+        SpawnLocal(prefab, cell);
 
-        // AnimalController.Start() より前に占有を登録し、同ターン内の経路探索干渉を防ぐ
-        var controller = obj.GetComponent<AnimalController>();
-        if (controller != null && AnimalOccupancyMap.Instance != null)
-            AnimalOccupancyMap.Instance.SetOccupied(cell, controller);
+        if (MultiplayerRuntime.IsMultiplayerSession && NetworkServer.active)
+        {
+            NetworkServer.SendToAll(new AnimalSpawnMessage
+            {
+                prefabName = prefab.name,
+                x = cell.x,
+                y = cell.y,
+                z = cell.z
+            });
+        }
 
         Debug.Log($"[AnimalSpawner] Wave{myCurrentWave} Turn{myTurnInWave}: {prefab.name} をスポーン (cell: {cell})");
         return true;
+    }
+
+    private void SpawnLocal(GameObject prefab, Vector3Int cell)
+    {
+        Vector3 worldPos = FieldGridConfig.Instance.grid.GetCellCenterWorld(cell);
+        GameObject obj = Instantiate(prefab, worldPos, Quaternion.identity);
+
+        // Register occupancy before AnimalController.Start() to prevent other
+        // actors in this same tick from choosing the occupied cell.
+        var controller = obj.GetComponent<AnimalController>();
+        if (controller != null && AnimalOccupancyMap.Instance != null)
+            AnimalOccupancyMap.Instance.SetOccupied(cell, controller);
+    }
+
+    public static void ApplyNetworkSpawn(string prefabName, Vector3Int cell)
+    {
+        if (string.IsNullOrEmpty(prefabName)) return;
+        foreach (var spawner in All)
+        {
+            if (spawner == null) continue;
+            GameObject prefab = spawner.ResolvePrefab(prefabName);
+            if (prefab == null) continue;
+            if (FieldGridConfig.Instance == null || FieldGridConfig.Instance.grid == null) return;
+            spawner.SpawnLocal(prefab, cell);
+            return;
+        }
+        Debug.LogWarning($"AnimalSpawner: received unknown animal prefab '{prefabName}'.");
+    }
+
+    private GameObject ResolvePrefab(string prefabName)
+    {
+        foreach (var entry in schedule)
+            if (entry.animalPrefab != null && entry.animalPrefab.name == prefabName) return entry.animalPrefab;
+        foreach (var group in randomGroups)
+        {
+            if (group.animalPrefabs == null) continue;
+            foreach (var candidate in group.animalPrefabs)
+                if (candidate != null && candidate.name == prefabName) return candidate;
+        }
+        return null;
     }
 
     // ──────────────────────────────────────

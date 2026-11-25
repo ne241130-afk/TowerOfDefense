@@ -304,6 +304,7 @@ public class CardPlacementController : MonoBehaviour
         HideHighlights();
 
         if (selectedCard == null) return;
+        Vector2 cellWorldSize = GetCellWorldSize(center);
 
         // ハンター召喚カードは範囲設定を他のカードと同様にareaRadiusで表示
         IReadOnlyList<Vector3Int> cells = EffectAreaUtility.GetSquareArea(center, selectedCard.areaRadius);
@@ -323,23 +324,52 @@ public class CardPlacementController : MonoBehaviour
                     if (!FieldGridConfig.Instance.IsWalkable(fc)) continue;
                     if (!highlightedCells.Add(fc)) continue; // 重複スキップ
                     highlightInstances.Add(CreateForbiddenHighlight(
-                        FieldGridConfig.Instance.grid.GetCellCenterWorld(fc)));
+                        FieldGridConfig.Instance.grid.GetCellCenterWorld(fc),
+                        cellWorldSize));
                 }
             }
         }
 
-        // カード効果範囲をハイライト（保護ゾーンと重なるセルは既に赤が表示済み）
+        var normalCells = new List<Vector3Int>();
         foreach (var cell in cells)
         {
             if (!FieldGridConfig.Instance.IsWalkable(cell)) continue;
             if (!highlightedCells.Add(cell)) continue; // 保護ゾーンと重なるのでスキップ
+            normalCells.Add(cell);
+        }
 
+        // 正方形範囲が丸ごと有効なら、1つのハイライトで範囲全体を表示する。
+        int span = selectedCard.areaRadius * 2 + 1;
+        int expectedCellCount = span * span;
+        bool canRenderAsSingleArea = normalCells.Count == expectedCellCount;
+
+        if (canRenderAsSingleArea)
+        {
+            Vector2 targetAreaSize = new Vector2(cellWorldSize.x * span, cellWorldSize.y * span);
+            GameObject go = CreatePlacementHighlight(
+                FieldGridConfig.Instance.grid.GetCellCenterWorld(center),
+                targetAreaSize);
+            highlightInstances.Add(go);
+            return;
+        }
+
+        // 一部セルのみ有効な場合は従来どおりセル単位で表示して、視覚範囲と実効果を一致させる。
+        foreach (var cell in normalCells)
+        {
             Vector3 worldPos = FieldGridConfig.Instance.grid.GetCellCenterWorld(cell);
-            GameObject go = highlightPrefab != null
-                ? Instantiate(highlightPrefab, worldPos, Quaternion.identity)
-                : CreateFallbackHighlight(worldPos);
+            GameObject go = CreatePlacementHighlight(worldPos, cellWorldSize);
             highlightInstances.Add(go);
         }
+    }
+
+    private GameObject CreatePlacementHighlight(Vector3 worldPos, Vector2 targetWorldSize)
+    {
+        GameObject go = highlightPrefab != null
+            ? Instantiate(highlightPrefab, worldPos, Quaternion.identity)
+            : CreateFallbackHighlight(worldPos);
+
+        FitHighlightToWorldSize(go, targetWorldSize);
+        return go;
     }
 
     /// <summary>
@@ -356,16 +386,13 @@ public class CardPlacementController : MonoBehaviour
         sr.color = new Color(1f, 0.7f, 0f, 0.4f);
         sr.sortingOrder = 10;
 
-        Vector3 cellSize = FieldGridConfig.Instance.grid.cellSize;
-        go.transform.localScale = new Vector3(cellSize.x, cellSize.y, 1f);
-
         return go;
     }
 
     /// <summary>
     /// スポーン保護ゾーン用の赤ハイライト。設定プレハブに限らず常にプログラム生成する。
     /// </summary>
-    private GameObject CreateForbiddenHighlight(Vector3 worldPos)
+    private GameObject CreateForbiddenHighlight(Vector3 worldPos, Vector2 cellWorldSize)
     {
         var go = new GameObject("HighlightForbidden");
         go.transform.position = worldPos;
@@ -375,10 +402,50 @@ public class CardPlacementController : MonoBehaviour
         sr.color = new Color(1f, 0.15f, 0.15f, 0.45f); // 薄い赤
         sr.sortingOrder = 10;
 
-        Vector3 cellSize = FieldGridConfig.Instance.grid.cellSize;
-        go.transform.localScale = new Vector3(cellSize.x, cellSize.y, 1f);
+        go.transform.localScale = new Vector3(cellWorldSize.x, cellWorldSize.y, 1f);
 
         return go;
+    }
+
+    private Vector2 GetCellWorldSize(Vector3Int referenceCell)
+    {
+        Grid grid = FieldGridConfig.Instance.grid;
+
+        Vector3 center = grid.GetCellCenterWorld(referenceCell);
+        float worldWidth = Vector3.Distance(center, grid.GetCellCenterWorld(referenceCell + Vector3Int.right));
+        float worldHeight = Vector3.Distance(center, grid.GetCellCenterWorld(referenceCell + Vector3Int.up));
+
+        if (worldWidth <= Mathf.Epsilon)
+            worldWidth = Mathf.Abs(grid.cellSize.x * grid.transform.lossyScale.x);
+
+        if (worldHeight <= Mathf.Epsilon)
+            worldHeight = Mathf.Abs(grid.cellSize.y * grid.transform.lossyScale.y);
+
+        return new Vector2(worldWidth, worldHeight);
+    }
+
+    private void FitHighlightToWorldSize(GameObject highlightObject, Vector2 targetWorldSize)
+    {
+        if (highlightObject == null) return;
+
+        SpriteRenderer sr = highlightObject.GetComponentInChildren<SpriteRenderer>();
+        if (sr == null)
+        {
+            highlightObject.transform.localScale = new Vector3(targetWorldSize.x, targetWorldSize.y, highlightObject.transform.localScale.z);
+            return;
+        }
+
+        Vector3 currentSize = sr.bounds.size;
+        if (currentSize.x <= Mathf.Epsilon || currentSize.y <= Mathf.Epsilon)
+        {
+            highlightObject.transform.localScale = new Vector3(targetWorldSize.x, targetWorldSize.y, highlightObject.transform.localScale.z);
+            return;
+        }
+
+        Vector3 localScale = highlightObject.transform.localScale;
+        float scaleX = targetWorldSize.x / currentSize.x;
+        float scaleY = targetWorldSize.y / currentSize.y;
+        highlightObject.transform.localScale = new Vector3(localScale.x * scaleX, localScale.y * scaleY, localScale.z);
     }
 
     private void HideHighlights()
