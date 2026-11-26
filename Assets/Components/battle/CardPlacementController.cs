@@ -564,7 +564,7 @@ public class CardPlacementController : MonoBehaviour
 
 
         //鎖で追加
-        if (selectedCard.effectType == CardEffectType.ChainLock)
+        else if (selectedCard.effectType == CardEffectType.ChainLock)
         {
             // 2つの出口で共有する鎖の効果を1つだけ作る
             IFieldEffect chainEffect =
@@ -578,13 +578,41 @@ public class CardPlacementController : MonoBehaviour
                 }
             }
 
-            // 鎖の見た目は2つの出口の中央に1つだけ表示
+            // 鎖の見た目は1つだけ表示する。まず配置位置に最も近いゴールを選ぶ。
             if (selectedCard.placedVisualPrefab != null &&
-                FieldGridConfig.Instance.goalCells.Count == 1)
+                FieldGridConfig.Instance.goalCells.Count > 0)
             {
-                Vector3 visualPosition =
-                    FieldGridConfig.Instance.grid.GetCellCenterWorld(
-                        FieldGridConfig.Instance.goalCells[0]);
+                var grid = FieldGridConfig.Instance.grid;
+                var goals = FieldGridConfig.Instance.goalCells;
+                Vector3 placementPosition = grid.GetCellCenterWorld(center);
+                Vector3Int nearestGoal = goals[0];
+                float nearestDistance = float.MaxValue;
+
+                foreach (var goalCell in goals)
+                {
+                    Vector3 goalPosition = grid.GetCellCenterWorld(goalCell);
+                    float distance = (goalPosition - placementPosition).sqrMagnitude;
+                    if (distance < nearestDistance)
+                    {
+                        nearestDistance = distance;
+                        nearestGoal = goalCell;
+                    }
+                }
+
+                Vector3 visualPosition = grid.GetCellCenterWorld(nearestGoal);
+                if (goals.Count >= 4 &&
+                    AreAdjacentCells(goals[2], goals[3]) &&
+                    (nearestGoal == goals[2] || nearestGoal == goals[3]))
+                {
+                    Vector3 firstGoal = grid.GetCellCenterWorld(goals[2]);
+                    Vector3 secondGoal = grid.GetCellCenterWorld(goals[3]);
+                    visualPosition = (firstGoal + secondGoal) * 0.5f;
+                }
+                else if (goals.Count > 1)
+                {
+                    // 最寄りのゴールが連結ペア以外なら、そのセル中央に表示。
+                    visualPosition = grid.GetCellCenterWorld(nearestGoal);
+                }
 
                 // ここで鎖の画像を生成
                 GameObject chainVisual = Instantiate(
@@ -594,7 +622,7 @@ public class CardPlacementController : MonoBehaviour
                 );
 
                 // 鎖の画像のレイヤー
-                chainVisual.layer = 2;
+                chainVisual.GetComponent<SpriteRenderer>().sortingOrder = 2;
 
                 RegisterPlacedBoardObject(chainVisual);
 
@@ -610,6 +638,12 @@ public class CardPlacementController : MonoBehaviour
             AdvanceTurnIfNeeded();
 
             return;
+        }
+
+        bool AreAdjacentCells(Vector3Int first, Vector3Int second)
+        {
+            return Mathf.Abs(first.x - second.x) + Mathf.Abs(first.y - second.y) == 1 &&
+                   first.z == second.z;
         }
 
         var cells = EffectAreaUtility.GetSquareArea(center, selectedCard.areaRadius);
