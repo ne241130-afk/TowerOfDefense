@@ -478,9 +478,20 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
     }
 
     [Server]
-    public void ServerHandleAnimalIntimidation(MultiplayerPlayerIdentity sender, int animalId)
+    public void ServerHandleAnimalIntimidation(MultiplayerPlayerIdentity sender, int animalId, int cost)
     {
         if (sender == null || !matchReady || animalId <= 0 || IsPlayerAlreadyEnded(sender.PlayerIndex)) return;
+        if (!playerStates.TryGetValue(sender.PlayerIndex, out var state) || state == null)
+        {
+            TrySendStatus(sender, "Intimidation failed: player state missing");
+            return;
+        }
+        cost = Mathf.Max(0, cost);
+        if (state.money < cost)
+        {
+            TrySendStatus(sender, $"Intimidation failed: not enough money (need={cost}, have={state.money})");
+            return;
+        }
         AnimalController target = null;
         foreach (var animal in FindObjectsByType<AnimalController>(FindObjectsSortMode.None))
             if (animal != null && animal.NetworkAnimalId == animalId) { target = animal; break; }
@@ -491,6 +502,9 @@ public class MultiplayerMatchCoordinator : NetworkBehaviour
             return;
         }
 
+        state.money -= cost;
+        SetPublicStateFromServer(sender.PlayerIndex, state);
+        TrySendPrivateState(sender, state);
         target.ApplyIntimidationForNextTurn();
         MultiplayerNetworkManager.BroadcastAuthoritativeAnimalState();
         ServerHandleSkipTurn(sender);

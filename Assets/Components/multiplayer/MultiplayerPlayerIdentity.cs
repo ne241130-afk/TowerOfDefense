@@ -180,9 +180,9 @@ public class MultiplayerPlayerIdentity : NetworkBehaviour
     }
 
     [Command]
-    public void CmdRequestAnimalIntimidation(int animalId)
+    public void CmdRequestAnimalIntimidation(int animalId, int cost)
     {
-        MultiplayerMatchCoordinator.Instance?.ServerHandleAnimalIntimidation(this, animalId);
+        MultiplayerMatchCoordinator.Instance?.ServerHandleAnimalIntimidation(this, animalId, cost);
     }
 
     [Command]

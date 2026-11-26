@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 /// <summary>
 /// 独立アクション「威嚇」の入力を管理する。
@@ -49,15 +50,13 @@ public class IntimidateActionController : MonoBehaviour
     private LineRenderer retreatPreviewBorderRenderer;
     private Texture2D retreatPreviewTexture;
     private Sprite retreatPreviewSprite;
+    private readonly List<RaycastResult> pointerRaycastResults = new List<RaycastResult>();
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
+        // MultiBattleScene has one controller/button per player side. Keep both
+        // scene objects alive; Instance remains the first controller for callers.
+        if (Instance == null) Instance = this;
 
         if (intimidateButton == null)
         {
@@ -69,19 +68,7 @@ public class IntimidateActionController : MonoBehaviour
             buttonImage = intimidateButton.targetGraphic as Image;
         }
 
-        // 以前の青ハイライト残骸がシーンに残ると、今の値を変更しても見えている物体が別になる。
-        // ここで旧プレビューを破棄して、現在のコントローラが唯一の描画元になるようにする。
-        var oldPreview = GameObject.Find("IntimidateRetreatPreview");
-        if (oldPreview != null)
-        {
-            DestroyImmediate(oldPreview);
-        }
-
-        var oldPreviewBorder = GameObject.Find("IntimidateRetreatPreviewBorder");
-        if (oldPreviewBorder != null)
-        {
-            DestroyImmediate(oldPreviewBorder);
-        }
+        string previewSuffix = GetInstanceID().ToString();
 
         retreatPreviewTexture = new Texture2D(1, 1, TextureFormat.RGBA32, mipChain: false)
         {
@@ -99,14 +86,14 @@ public class IntimidateActionController : MonoBehaviour
 
         // ここが重要: 赤のハイライトは FieldGridConfig / Grid のワールド空間に属している。
         // その親に合わせないと、セル座標を UI のローカル座標のように扱って小さく、あるいは見えなくなる。
-        retreatPreviewObject = new GameObject("IntimidateRetreatPreview");
+        retreatPreviewObject = new GameObject("IntimidateRetreatPreview_" + previewSuffix);
         retreatPreviewRenderer = retreatPreviewObject.AddComponent<SpriteRenderer>();
         retreatPreviewRenderer.sprite = retreatPreviewSprite;
         retreatPreviewRenderer.material = new Material(Shader.Find("Sprites/Default"));
         retreatPreviewRenderer.sortingOrder = 45;
         retreatPreviewRenderer.enabled = false;
 
-        retreatPreviewBorderObject = new GameObject("IntimidateRetreatPreviewBorder");
+        retreatPreviewBorderObject = new GameObject("IntimidateRetreatPreviewBorder_" + previewSuffix);
         retreatPreviewBorderRenderer = retreatPreviewBorderObject.AddComponent<LineRenderer>();
         retreatPreviewBorderRenderer.alignment = LineAlignment.View;
         retreatPreviewBorderRenderer.useWorldSpace = true;
@@ -223,7 +210,7 @@ public class IntimidateActionController : MonoBehaviour
             Destroy(retreatPreviewTexture);
         }
 
-        if (Instance == this) Instance = null;
+        if (Instance == this) Instance = FindFirstObjectByType<IntimidateActionController>();
     }
 
     private void Update()
@@ -318,7 +305,7 @@ public class IntimidateActionController : MonoBehaviour
             return;
         }
 
-        if (EconomyManager.Instance != null && intimidateCost > 0)
+        if (!MultiplayerRuntime.IsMultiplayerSession && EconomyManager.Instance != null && intimidateCost > 0)
         {
             if (!EconomyManager.Instance.TrySpend(intimidateCost))
             {
@@ -336,7 +323,7 @@ public class IntimidateActionController : MonoBehaviour
                 return;
             }
 
-            identity.CmdRequestAnimalIntimidation(animal.NetworkAnimalId);
+            identity.CmdRequestAnimalIntimidation(animal.NetworkAnimalId, intimidateCost);
             CancelAiming();
             RefreshButtonState();
             return;
@@ -534,7 +521,30 @@ public class IntimidateActionController : MonoBehaviour
 
     private bool IsPointerOverUI()
     {
-        return EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+        EventSystem eventSystem = EventSystem.current;
+        if (eventSystem == null) return false;
+
+        // Some multiplayer HUD panels cover a large part of the board with a
+        // transparent Graphic. Ignore those decorative raycast hits, while still
+        // keeping clicks on actual controls (cards, buttons, input fields) in UI.
+        var pointer = new PointerEventData(eventSystem)
+        {
+            position = Input.mousePosition
+        };
+        pointerRaycastResults.Clear();
+        eventSystem.RaycastAll(pointer, pointerRaycastResults);
+
+        foreach (RaycastResult hit in pointerRaycastResults)
+        {
+            if (!(hit.module is GraphicRaycaster)) continue;
+            if (hit.gameObject.GetComponentInParent<Selectable>() != null ||
+                ExecuteEvents.GetEventHandler<IPointerClickHandler>(hit.gameObject) != null)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private bool CanStartIntimidate()
