@@ -2276,7 +2276,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EconomyManager
   startingMoney: 500
-  incomePerTurn: 20
+  incomePerTurn: 15
   currentMoney: 0
   OnMoneyChanged:
     m_PersistentCalls:
@@ -2310,7 +2310,7 @@ MonoBehaviour:
   currentWave: 1
   turnInWave: 0
   turnsPerWave: 20
-  capturesPerWave: 5
+  capturesPerWave: 999
   OnWaveStarted:
     m_PersistentCalls:
       m_Calls: []
@@ -2847,6 +2847,16 @@ MonoBehaviour:
     animalPrefab: {fileID: 2599670119332685034, guid: 5184a845c33e74a73b5544f12e8a01f3, type: 3}
     useDefaultSpawnCell: 0
     spawnCell: {x: -25, y: 16, z: 0}
+  - wave: 1
+    turnInWave: 1
+    animalPrefab: {fileID: 6461936735922963314, guid: 4829df9a63d0d48faac3a01c57dff35d, type: 3}
+    useDefaultSpawnCell: 0
+    spawnCell: {x: -11, y: -2, z: 0}
+  - wave: 1
+    turnInWave: 1
+    animalPrefab: {fileID: 2599670119332685034, guid: 774637304d3ad41a8b5dd132baf754a5, type: 3}
+    useDefaultSpawnCell: 0
+    spawnCell: {x: 0, y: -2, z: 0}
   randomGroups:
   - wave: 0
     waveEnd: 99

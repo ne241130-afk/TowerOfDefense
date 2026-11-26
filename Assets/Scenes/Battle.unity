@@ -1909,8 +1909,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4476a3ddc3e4841b59081fb5177512a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EconomyManager
-  startingMoney: 100
-  incomePerTurn: 10
+  startingMoney: 300
+  incomePerTurn: 15
   currentMoney: 0
   OnMoneyChanged:
     m_PersistentCalls:
@@ -1944,7 +1944,7 @@ MonoBehaviour:
   currentWave: 1
   turnInWave: 0
   turnsPerWave: 20
-  capturesPerWave: 5
+  capturesPerWave: 999
   OnWaveStarted:
     m_PersistentCalls:
       m_Calls: []

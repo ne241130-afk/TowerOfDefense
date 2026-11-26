@@ -566,13 +566,47 @@ public class CardPlacementController : MonoBehaviour
         //鎖で追加
         else if (selectedCard.effectType == CardEffectType.ChainLock)
         {
-            // 2つの出口で共有する鎖の効果を1つだけ作る
+            var goals = FieldGridConfig.Instance.goalCells;
+            var grid = FieldGridConfig.Instance.grid;
+            var lockedGoalCells = new List<Vector3Int>();
+
+            if (goals.Count > 0)
+            {
+                Vector3 placementPosition = grid.GetCellCenterWorld(center);
+                Vector3Int nearestGoal = goals[0];
+                float nearestDistance = float.MaxValue;
+
+                foreach (var goalCell in goals)
+                {
+                    Vector3 goalPosition = grid.GetCellCenterWorld(goalCell);
+                    float distance = (goalPosition - placementPosition).sqrMagnitude;
+                    if (distance < nearestDistance)
+                    {
+                        nearestDistance = distance;
+                        nearestGoal = goalCell;
+                    }
+                }
+
+                if (goals.Count >= 4 &&
+                    AreAdjacentCells(goals[2], goals[3]) &&
+                    (nearestGoal == goals[2] || nearestGoal == goals[3]))
+                {
+                    lockedGoalCells.Add(goals[2]);
+                    lockedGoalCells.Add(goals[3]);
+                }
+                else
+                {
+                    lockedGoalCells.Add(nearestGoal);
+                }
+            }
+
+            // 画像と同じ最寄りゴール(連結した[2],[3]なら両方)に効果を設定する。
             IFieldEffect chainEffect =
                 CardEffectFactory.CreateEffect(CardEffectType.ChainLock);
 
             if (chainEffect != null)
             {
-                foreach (var goalCell in FieldGridConfig.Instance.goalCells)
+                foreach (var goalCell in lockedGoalCells)
                 {
                     FieldEffectMap.Instance.SetEffect(goalCell, chainEffect);
                 }
@@ -582,8 +616,6 @@ public class CardPlacementController : MonoBehaviour
             if (selectedCard.placedVisualPrefab != null &&
                 FieldGridConfig.Instance.goalCells.Count > 0)
             {
-                var grid = FieldGridConfig.Instance.grid;
-                var goals = FieldGridConfig.Instance.goalCells;
                 Vector3 placementPosition = grid.GetCellCenterWorld(center);
                 Vector3Int nearestGoal = goals[0];
                 float nearestDistance = float.MaxValue;
